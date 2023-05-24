@@ -1,0 +1,89 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<Hero/ > should render with a default heading 1`] = `
+.emotion-0 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  height: 100vh;
+  background-image: linear-gradient(to left, #7928CA, #FF0080);
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.emotion-1 {
+  margin-right: var(--chakra-space-4);
+}
+
+.emotion-2 {
+  font-family: var(--chakra-fonts-heading);
+  font-weight: var(--chakra-fontWeights-bold);
+  font-size: 6vw;
+  line-height: 1.33;
+}
+
+@media screen and (min-width: 48em) {
+  .emotion-2 {
+    line-height: 1.2;
+  }
+}
+
+<body
+  class="chakra-ui-dark"
+>
+  <div
+    id="chakra-toast-portal"
+  >
+    <ul
+      id="chakra-toast-manager-top"
+      style="position: fixed; z-index: 5500; pointer-events: none; display: flex; flex-direction: column; margin: 0px auto;"
+    />
+    <ul
+      id="chakra-toast-manager-top-left"
+      style="position: fixed; z-index: 5500; pointer-events: none; display: flex; flex-direction: column;"
+    />
+    <ul
+      id="chakra-toast-manager-top-right"
+      style="position: fixed; z-index: 5500; pointer-events: none; display: flex; flex-direction: column;"
+    />
+    <ul
+      id="chakra-toast-manager-bottom-left"
+      style="position: fixed; z-index: 5500; pointer-events: none; display: flex; flex-direction: column;"
+    />
+    <ul
+      id="chakra-toast-manager-bottom"
+      style="position: fixed; z-index: 5500; pointer-events: none; display: flex; flex-direction: column; margin: 0px auto;"
+    />
+    <ul
+      id="chakra-toast-manager-bottom-right"
+      style="position: fixed; z-index: 5500; pointer-events: none; display: flex; flex-direction: column;"
+    />
+  </div>
+  <div>
+    <div
+      class="emotion-0"
+    >
+      <img
+        alt="Chakra-ui Logo"
+        class="chakra-image emotion-1"
+        src="/img/chakra-logo.png"
+      />
+      <h2
+        class="chakra-heading emotion-2"
+      >
+        NextJS with Chakra-ui Boilerplate
+      </h2>
+    </div>
+  </div>
+</body>
+`;
