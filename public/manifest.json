@@ -1,15 +1,15 @@
 {
-  "name": "NextJS with Chakra-ui Boilerplate",
-  "short_name": "NextJS with Chakra-ui Boilerplate",
+  "name": "Compute Hub - Volunteer Computing Central",
+  "short_name": "Compute Hub",
   "icons": [
     {
-      "src": "/img/chakra-logo.png",
+      "src": "/img/computer_hub_icon.png",
       "type": "image/png",
       "sizes": "48x48"
     }
   ],
   "background_color": "#000",
-  "description": "NextJS with Chakra-ui Boilerplate",
+  "description": "Compute Hub - Volunteer Computing Central",
   "display": "fullscreen",
   "start_url": "/",
   "theme_color": "#000"
