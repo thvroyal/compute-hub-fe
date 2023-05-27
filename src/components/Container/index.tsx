@@ -8,7 +8,6 @@ const Container = (props: FlexProps) => {
       alignItems="center"
       justifyContent="flex-start"
       maxW="container.xl"
-      pb="36px"
       {...props}
     />
   )

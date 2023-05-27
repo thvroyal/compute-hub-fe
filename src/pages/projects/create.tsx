@@ -31,7 +31,7 @@ const CreateProject = () => {
   })
 
   return (
-    <Container>
+    <Container pb="36px">
       <Flex
         w="min(935px, 100%)"
         mt="64px"
