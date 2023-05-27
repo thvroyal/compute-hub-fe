@@ -3,6 +3,8 @@ import { AppProps } from 'next/app'
 import { ChakraProvider } from '@chakra-ui/react'
 
 import theme from 'theme'
+import Header from 'components/Header'
+import Footer from 'components/Footer'
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
@@ -17,8 +19,9 @@ function MyApp({ Component, pageProps }: AppProps) {
           content="Compute Hub - Volunteer Computing Central"
         />
       </Head>
-
+      <Header />
       <Component {...pageProps} />
+      <Footer />
     </ChakraProvider>
   )
 }

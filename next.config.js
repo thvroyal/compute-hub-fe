@@ -2,9 +2,22 @@
 const withPWA = require('next-pwa')
 const isProduction = process.env.NODE_ENV === 'production'
 
-module.exports = withPWA({
-  pwa: {
-    dest: 'public',
-    disable: !isProduction
+module.exports = {
+  ...withPWA({
+    pwa: {
+      dest: 'public',
+      disable: !isProduction
+    }
+  }),
+  ...{
+    webpack: (config) => {
+      config.module.rules.push({
+        test: /\.mjs$/,
+        include: /node_modules/,
+        type: 'javascript/auto'
+      })
+
+      return config
+    }
   }
-})
+}
