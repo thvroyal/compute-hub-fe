@@ -1,6 +1,7 @@
 import { Icon, useColorModeValue, useToken } from '@chakra-ui/react'
 
-const Logo = (props: unknown) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const Logo = (props: any) => {
   const [blue500, teal500, orange500, gray600] = useToken('colors', [
     'blue.500',
     'teal.500',
