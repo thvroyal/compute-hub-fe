@@ -40,5 +40,11 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [...AUTH_PAGES, '/explore', '/projects/:path*', '/users/:username*']
+  matcher: [
+    '/login',
+    '/register',
+    '/explore',
+    '/projects/:path*',
+    '/users/:username*'
+  ]
 }
