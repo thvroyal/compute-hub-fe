@@ -1,0 +1,29 @@
+import axios, { AxiosError } from 'axios'
+
+axios.defaults.baseURL = process.env.NEXT_PUBLIC_BASE_URL
+
+// enum STATUS {
+//   SUCCESS = 200,
+//   CREATED = 201,
+//   BAD_REQUEST = 400,
+//   UNAUTHORIZED = 401,
+//   NOT_FOUND = 404
+// }
+
+interface RegisterData {
+  name: string
+  email: string
+  password: string
+}
+export const register = async (data: RegisterData) => {
+  try {
+    const response = await axios.post('/auth/register', data)
+    return { data: response.data, error: null }
+  } catch (error) {
+    const baseError = error as AxiosError<{ message: string }>
+    return {
+      error: baseError.response?.data.message || baseError.message,
+      data: null
+    }
+  }
+}

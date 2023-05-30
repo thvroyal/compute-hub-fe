@@ -6,7 +6,11 @@ import {
 } from '@chakra-ui/form-control'
 import { Input } from '@chakra-ui/input'
 import { Text, VStack } from '@chakra-ui/layout'
+import { useToast } from '@chakra-ui/react'
+import { useRouter } from 'next/router'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { register as createUser } from '../../helpers/apis'
 
 interface FormValues {
   email: string
@@ -15,6 +19,9 @@ interface FormValues {
   confirmPassword: string
 }
 const RegisterForm = () => {
+  const toast = useToast()
+  const router = useRouter()
+  const [loading, setLoading] = useState<boolean>(false)
   const {
     register,
     handleSubmit,
@@ -22,8 +29,25 @@ const RegisterForm = () => {
     formState: { errors }
   } = useForm<FormValues>()
 
-  const onSubmit = handleSubmit((values) => {
-    console.log(values)
+  const onSubmit = handleSubmit(async (values) => {
+    const { email, name, password } = values
+    setLoading(true)
+    const { data, error } = await createUser({ email, name, password })
+    setLoading(false)
+    if (data) {
+      toast({
+        title: 'Register successfully',
+        description: 'You will be redirected to home page',
+        status: 'success'
+      })
+      router.push('/')
+    } else {
+      toast({
+        title: 'Register failed',
+        description: error,
+        status: 'error'
+      })
+    }
   })
 
   return (
@@ -112,7 +136,13 @@ const RegisterForm = () => {
               </FormErrorMessage>
             )}
           </FormControl>
-          <Button variant="solid" w="full" colorScheme="blue" type="submit">
+          <Button
+            variant="solid"
+            w="full"
+            colorScheme="blue"
+            type="submit"
+            isLoading={loading}
+          >
             Register
           </Button>
         </VStack>

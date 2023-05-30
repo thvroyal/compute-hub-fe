@@ -8,7 +8,17 @@ import Footer from 'components/Footer'
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <ChakraProvider resetCSS theme={theme}>
+    <ChakraProvider
+      resetCSS
+      theme={theme}
+      toastOptions={{
+        defaultOptions: {
+          position: 'top',
+          duration: 5000,
+          isClosable: true
+        }
+      }}
+    >
       <Head>
         <title>Compute Hub</title>
         <link rel="shortcut icon" href="/img/computer_hub_icon.png" />
