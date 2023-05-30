@@ -6,6 +6,10 @@ import {
 } from '@chakra-ui/form-control'
 import { Input } from '@chakra-ui/input'
 import { Text, VStack } from '@chakra-ui/layout'
+import { useToast } from '@chakra-ui/react'
+import { login } from 'helpers/apis'
+import { useRouter } from 'next/router'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 interface FormValues {
@@ -13,14 +17,39 @@ interface FormValues {
   password: string
 }
 const LoginForm = () => {
+  const toast = useToast()
+  const router = useRouter()
+  const [loading, setLoading] = useState<boolean>(false)
   const {
     register,
     handleSubmit,
     formState: { errors }
   } = useForm<FormValues>()
 
-  const onSubmit = handleSubmit((values) => {
-    console.log(values)
+  const onSubmit = handleSubmit(async (values) => {
+    setLoading(true)
+    const { data, error } = await login(values)
+    setLoading(false)
+    if (data) {
+      const { next } = router.query
+      toast({
+        title: 'Login successfully',
+        description: `You will be redirected to ${next || 'home'} page`,
+        status: 'success'
+      })
+
+      if (next) {
+        router.push(next as string)
+      } else {
+        router.push('/')
+      }
+    } else {
+      toast({
+        title: 'Login failed',
+        description: error,
+        status: 'error'
+      })
+    }
   })
 
   return (
@@ -70,7 +99,13 @@ const LoginForm = () => {
               <FormErrorMessage>{errors.password.message}</FormErrorMessage>
             )}
           </FormControl>
-          <Button variant="solid" w="full" colorScheme="blue" type="submit">
+          <Button
+            variant="solid"
+            w="full"
+            colorScheme="blue"
+            type="submit"
+            isLoading={loading}
+          >
             Login
           </Button>
         </VStack>

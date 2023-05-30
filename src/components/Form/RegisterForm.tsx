@@ -40,7 +40,7 @@ const RegisterForm = () => {
         description: 'You will be redirected to home page',
         status: 'success'
       })
-      router.push('/')
+      router.push('/explore')
     } else {
       toast({
         title: 'Register failed',

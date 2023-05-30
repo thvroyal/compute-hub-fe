@@ -1,6 +1,7 @@
 import axios, { AxiosError } from 'axios'
 
 axios.defaults.baseURL = process.env.NEXT_PUBLIC_BASE_URL
+axios.defaults.withCredentials = true
 
 // enum STATUS {
 //   SUCCESS = 200,
@@ -18,6 +19,23 @@ interface RegisterData {
 export const register = async (data: RegisterData) => {
   try {
     const response = await axios.post('/auth/register', data)
+    return { data: response.data, error: null }
+  } catch (error) {
+    const baseError = error as AxiosError<{ message: string }>
+    return {
+      error: baseError.response?.data.message || baseError.message,
+      data: null
+    }
+  }
+}
+
+interface LoginData {
+  email: string
+  password: string
+}
+export const login = async (data: LoginData) => {
+  try {
+    const response = await axios.post('/auth/login', data)
     return { data: response.data, error: null }
   } catch (error) {
     const baseError = error as AxiosError<{ message: string }>

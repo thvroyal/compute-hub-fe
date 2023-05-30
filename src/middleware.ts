@@ -8,15 +8,17 @@ const isAuthPages = (url: string) =>
 
 export async function middleware(request: NextRequest) {
   const { url, nextUrl, cookies } = request
-  const { value: token } = cookies.get('token') ?? { value: null }
+  const { value: token } = cookies.get('accessToken') ?? { value: null }
 
-  const hasVerifiedToken = token && (await verifyJwtToken(token))
+  const hasVerifiedToken =
+    token && (await verifyJwtToken(token).catch((error) => console.log(error)))
   const isAuthPageRequested = isAuthPages(nextUrl.pathname)
 
   if (isAuthPageRequested) {
     if (!hasVerifiedToken) {
       const response = NextResponse.next()
-      response.cookies.delete('token')
+      response.cookies.delete('accessToken')
+      response.cookies.delete('refreshToken')
       return response
     }
 
@@ -31,7 +33,8 @@ export async function middleware(request: NextRequest) {
     const response = NextResponse.redirect(
       new URL(`/login?${searchParams}`, url)
     )
-    response.cookies.delete('token')
+    response.cookies.delete('accessToken')
+    response.cookies.delete('refreshToken')
 
     return response
   }

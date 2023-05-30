@@ -13,7 +13,6 @@ export function getJwtSecretKey() {
 export async function verifyJwtToken(token: string) {
   try {
     const { payload } = await jwtVerify(token, getJwtSecretKey())
-
     return payload
   } catch (error) {
     return null
