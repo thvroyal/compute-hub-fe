@@ -1,8 +1,8 @@
 import { Box } from '@chakra-ui/layout'
 import Container from 'components/Container'
-import LoginForm from 'components/Form/LoginForm'
+import RegisterForm from 'components/Form/RegisterForm'
 
-export default function Login() {
+export default function Register() {
   return (
     <Container width="100vw" height="100vh" position="relative">
       <svg
@@ -40,7 +40,7 @@ export default function Login() {
         left="50%"
         transform="translate(-50%, -50%)"
       >
-        <LoginForm />
+        <RegisterForm />
       </Box>
     </Container>
   )
