@@ -17,17 +17,14 @@ import Upload from 'components/Form/Upload'
 interface FormValues {
   name: string
   categories: string[]
+  inputFile: FileList
+  sourceFile: FileList
 }
 const CreateProject = () => {
-  const { register, handleSubmit } = useForm<FormValues>()
+  const { register, handleSubmit, watch } = useForm<FormValues>()
 
   const onSubmit = handleSubmit((values) => {
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        alert(JSON.stringify(values, null, 2))
-        resolve()
-      }, 3000)
-    })
+    console.log(values)
   })
 
   return (
@@ -81,13 +78,21 @@ const CreateProject = () => {
                 Each tag will separate by a comma.
               </FormHelperText>
             </FormControl>
-            <FormControl isRequired>
+            <FormControl>
               <FormLabel>Input Values</FormLabel>
-              <Upload />
+              <Upload
+                register={register('inputFile')}
+                value={watch('inputFile')}
+              />
             </FormControl>
-            <FormControl isRequired>
+            <FormControl>
               <FormLabel>Main Function</FormLabel>
-              <Upload />
+              <Upload
+                register={register('sourceFile')}
+                value={watch('sourceFile')}
+                accept=".js"
+                description="Only accept *.js file"
+              />
             </FormControl>
             <Flex w="full" justify="flex-end">
               <Button size="md" type="submit" colorScheme="blue">
