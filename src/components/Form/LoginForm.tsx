@@ -8,9 +8,11 @@ import { Input } from '@chakra-ui/input'
 import { Text, VStack } from '@chakra-ui/layout'
 import { useToast } from '@chakra-ui/react'
 import { login } from 'helpers/apis'
+import { useAppDispatch } from 'hooks/store'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { setCurrentUser } from 'store/slices/authSlice'
 
 interface FormValues {
   email: string
@@ -19,6 +21,7 @@ interface FormValues {
 const LoginForm = () => {
   const toast = useToast()
   const router = useRouter()
+  const dispatch = useAppDispatch()
   const [loading, setLoading] = useState<boolean>(false)
   const {
     register,
@@ -32,6 +35,7 @@ const LoginForm = () => {
     setLoading(false)
     if (data) {
       const { next } = router.query
+      dispatch(setCurrentUser(data.user))
       toast({
         title: 'Login successfully',
         description: `You will be redirected to ${next || 'home'} page`,

@@ -45,3 +45,16 @@ export const login = async (data: LoginData) => {
     }
   }
 }
+
+export const logout = async () => {
+  try {
+    const response = await axios.get('/auth/logout')
+    return { data: response.data, error: null }
+  } catch (error) {
+    const baseError = error as AxiosError<{ message: string }>
+    return {
+      error: baseError.response?.data.message || baseError.message,
+      data: null
+    }
+  }
+}

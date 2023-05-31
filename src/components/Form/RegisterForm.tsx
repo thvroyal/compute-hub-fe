@@ -7,9 +7,11 @@ import {
 import { Input } from '@chakra-ui/input'
 import { Text, VStack } from '@chakra-ui/layout'
 import { useToast } from '@chakra-ui/react'
+import { useAppDispatch } from 'hooks/store'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { setCurrentUser } from 'store/slices/authSlice'
 import { register as createUser } from '../../helpers/apis'
 
 interface FormValues {
@@ -21,6 +23,7 @@ interface FormValues {
 const RegisterForm = () => {
   const toast = useToast()
   const router = useRouter()
+  const dispatch = useAppDispatch()
   const [loading, setLoading] = useState<boolean>(false)
   const {
     register,
@@ -35,6 +38,7 @@ const RegisterForm = () => {
     const { data, error } = await createUser({ email, name, password })
     setLoading(false)
     if (data) {
+      dispatch(setCurrentUser(data))
       toast({
         title: 'Register successfully',
         description: 'You will be redirected to home page',

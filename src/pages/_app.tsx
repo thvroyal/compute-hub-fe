@@ -1,12 +1,16 @@
 import Head from 'next/head'
 import { AppProps } from 'next/app'
 import { ChakraProvider } from '@chakra-ui/react'
+import { Provider } from 'react-redux'
+import { wrapper } from 'store/store'
 
 import theme from 'theme'
 import Header from 'components/Header'
 import Footer from 'components/Footer'
 
-function MyApp({ Component, pageProps }: AppProps) {
+function MyApp({ Component, ...rest }: AppProps) {
+  const { store, props } = wrapper.useWrappedStore(rest)
+  const { pageProps } = props
   return (
     <ChakraProvider
       resetCSS
@@ -29,9 +33,11 @@ function MyApp({ Component, pageProps }: AppProps) {
           content="Compute Hub - Volunteer Computing Central"
         />
       </Head>
-      <Header />
-      <Component {...pageProps} />
-      <Footer />
+      <Provider store={store}>
+        <Header />
+        <Component {...pageProps} />
+        <Footer />
+      </Provider>
     </ChakraProvider>
   )
 }
