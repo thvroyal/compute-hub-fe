@@ -20,10 +20,11 @@ import DarkModeSwitch from 'components/DarkModeSwitch'
 import { PlusIcon } from 'components/Icons'
 import Logo from 'components/Logo'
 import { logout } from 'helpers/apis'
-import { useAppSelector } from 'hooks/store'
+import { useAppDispatch, useAppSelector } from 'hooks/store'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
-import { selectCurrentUser } from 'store/slices/authSlice'
+import { clearCurrentUser, selectCurrentUser } from 'store/slices/authSlice'
+import { AUTH_PAGES } from 'utils/constants'
 import { navigation } from './constant'
 
 const Header = () => {
@@ -31,14 +32,24 @@ const Header = () => {
   const toast = useToast()
   const router = useRouter()
   const currentUser = useAppSelector(selectCurrentUser)
+  const dispatch = useAppDispatch()
+  const isAuthPage = AUTH_PAGES.includes(router.pathname)
+  const linkAuthPage = isAuthPage
+    ? AUTH_PAGES.find((page) => page !== router.pathname)
+    : null
 
   const handleCreateNewProject = () => {
     router.push('/projects/create')
   }
 
+  const handleClickButtonAuth = () => {
+    router.push(linkAuthPage || '/login')
+  }
+
   const handleLogOut = async () => {
     const { error } = await logout()
     if (!error) {
+      dispatch(clearCurrentUser())
       router.push('/login')
     } else {
       toast({
@@ -69,18 +80,32 @@ const Header = () => {
               ))}
           </HStack>
           <HStack spacing="32px">
-            <Button
-              colorScheme="blue"
-              size="sm"
-              leftIcon={<PlusIcon />}
-              onClick={handleCreateNewProject}
-            >
-              New
-            </Button>
-            {currentUser && (
+            {linkAuthPage ? (
+              <Button
+                variant="outline"
+                colorScheme="blue"
+                size="sm"
+                onClick={handleClickButtonAuth}
+              >
+                {linkAuthPage === '/login' ? 'Login' : 'Sign up'}
+              </Button>
+            ) : (
+              <Button
+                colorScheme="blue"
+                size="sm"
+                leftIcon={<PlusIcon />}
+                onClick={handleCreateNewProject}
+              >
+                New
+              </Button>
+            )}
+            {!isAuthPage && (
               <Menu>
                 <MenuButton>
-                  <Avatar size="sm" name={currentUser?.name} />
+                  <Avatar
+                    size="sm"
+                    name={currentUser?.name || 'Default Name'}
+                  />
                 </MenuButton>
                 <Portal>
                   <MenuList>

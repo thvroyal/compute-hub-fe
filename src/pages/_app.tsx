@@ -1,16 +1,17 @@
-import Head from 'next/head'
-import { AppProps } from 'next/app'
 import { ChakraProvider } from '@chakra-ui/react'
+import { AppProps } from 'next/app'
+import Head from 'next/head'
 import { Provider } from 'react-redux'
 import { wrapper } from 'store/store'
 
-import theme from 'theme'
-import Header from 'components/Header'
 import Footer from 'components/Footer'
+import Header from 'components/Header'
+import theme from 'theme'
 
 function MyApp({ Component, ...rest }: AppProps) {
   const { store, props } = wrapper.useWrappedStore(rest)
   const { pageProps } = props
+
   return (
     <ChakraProvider
       resetCSS

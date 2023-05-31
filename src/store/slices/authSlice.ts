@@ -24,6 +24,10 @@ export const authSlice = createSlice({
       state.user = action.payload
     },
 
+    clearCurrentUser: (state) => {
+      state.user = null
+    },
+
     [HYDRATE]: (state, action) => {
       return {
         ...state,
@@ -33,6 +37,6 @@ export const authSlice = createSlice({
   }
 })
 
-export const { setCurrentUser } = authSlice.actions
+export const { setCurrentUser, clearCurrentUser } = authSlice.actions
 export const selectCurrentUser = (state: RootState) => state.auth.user
 export const authReducer = authSlice.reducer

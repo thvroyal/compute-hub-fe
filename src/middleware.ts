@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { AUTH_PAGES } from 'utils/constants'
 import { verifyJwtToken } from './libs/auth'
-
-const AUTH_PAGES = ['/login', '/register']
 
 const isAuthPages = (url: string) =>
   AUTH_PAGES.some((page) => page.startsWith(url))
