@@ -3,6 +3,7 @@ import { AppProps } from 'next/app'
 import Head from 'next/head'
 import { Provider } from 'react-redux'
 import { wrapper } from 'store/store'
+import Script from 'next/script'
 
 import Footer from 'components/Footer'
 import Header from 'components/Header'
@@ -24,11 +25,19 @@ function MyApp({ Component, ...rest }: AppProps) {
         }
       }}
     >
+      <Script
+        src="/static/simplewebsocket.min.js"
+        strategy="beforeInteractive"
+      />
+      <Script src="/static/volunteer.js" strategy="beforeInteractive" />
+      <Script src="/static/config.js" strategy="beforeInteractive" />
+      <Script src="/static/connect.js" strategy="beforeInteractive" />
       <Head>
         <title>Compute Hub</title>
         <link rel="shortcut icon" href="/img/computer_hub_icon.png" />
         <link rel="apple-touch-icon" href="/img/computer_hub_icon.png" />
         <link rel="manifest" href="/manifest.json" />
+
         <meta
           name="description"
           content="Compute Hub - Volunteer Computing Central"
