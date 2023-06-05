@@ -71,3 +71,20 @@ export const getMe = async () => {
     }
   }
 }
+
+export const createProject = async (data: FormData) => {
+  try {
+    const response = await axios.post('/projects', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return { data: response.data, error: null }
+  } catch (error) {
+    const baseError = error as AxiosError<{ message: string }>
+    return {
+      error: baseError.response?.data.message || baseError.message,
+      data: null
+    }
+  }
+}

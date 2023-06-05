@@ -8,23 +8,50 @@ import {
   HStack,
   Input,
   Text,
+  useToast,
   VStack
 } from '@chakra-ui/react'
 import { BoxIcon } from 'components/Icons'
 import { useForm } from 'react-hook-form'
 import Upload from 'components/Form/Upload'
+import { createProject } from 'helpers/apis'
+import { useState } from 'react'
+import { useRouter } from 'next/router'
 
 interface FormValues {
   name: string
-  categories: string[]
+  categories: string
   inputFile: FileList
   sourceFile: FileList
 }
 const CreateProject = () => {
   const { register, handleSubmit, watch } = useForm<FormValues>()
+  const [loading, setLoading] = useState<boolean>(false)
+  const toast = useToast()
+  const router = useRouter()
 
-  const onSubmit = handleSubmit((values) => {
-    console.log(values)
+  const onSubmit = handleSubmit(async (values) => {
+    const formData = new FormData()
+    formData.append('name', values.name)
+    formData.append('categories', values.categories)
+    formData.append('inputFile', values.inputFile[0])
+    formData.append('sourceFile', values.sourceFile[0])
+    setLoading(true)
+    const { data, error } = await createProject(formData)
+    setLoading(false)
+    if (data) {
+      toast({
+        title: 'Create project successfully',
+        status: 'success'
+      })
+      router.push(`/projects/${data.id}`)
+    } else {
+      toast({
+        title: 'Create project failed',
+        description: error,
+        status: 'error'
+      })
+    }
   })
 
   return (
@@ -54,7 +81,7 @@ const CreateProject = () => {
         </VStack>
 
         {/* Form create project */}
-        <form onSubmit={onSubmit}>
+        <form onSubmit={onSubmit} encType="multipart/form-data">
           <VStack spacing="32px">
             <FormControl isRequired>
               <FormLabel>Project Name</FormLabel>
@@ -95,7 +122,12 @@ const CreateProject = () => {
               />
             </FormControl>
             <Flex w="full" justify="flex-end">
-              <Button size="md" type="submit" colorScheme="blue">
+              <Button
+                size="md"
+                type="submit"
+                colorScheme="blue"
+                isLoading={loading}
+              >
                 Create project
               </Button>
             </Flex>

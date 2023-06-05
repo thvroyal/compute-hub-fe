@@ -36,11 +36,6 @@ const LoginForm = () => {
     if (data) {
       const { next } = router.query
       dispatch(setCurrentUser(data.user))
-      toast({
-        title: 'Login successfully',
-        description: `You will be redirected to ${next || 'home'} page`,
-        status: 'success'
-      })
 
       if (next) {
         router.push(next as string)
