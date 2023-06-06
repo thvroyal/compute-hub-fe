@@ -17,6 +17,7 @@ const Explore = () => {
         </Text>
         <ProjectCard
           name="Amicable Numbers"
+          id="123-tfr-3e4"
           description="Amicable Numbers is an independent research project that uses Internet-connected computers to find new amicable pairs. You can contribute to our research by running a free program on your computer."
           categories={['Mathematics', 'Computing', 'Games']}
           info={[
@@ -36,6 +37,7 @@ const Explore = () => {
 
         <ProjectCard
           name="Amicable Numbers"
+          id="123-e4r-3e4"
           description="Amicable Numbers is an independent research project that uses Internet-connected computers to find new amicable pairs. You can contribute to our research by running a free program on your computer."
           categories={['Mathematics', 'Computing', 'Games']}
           info={[

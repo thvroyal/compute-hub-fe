@@ -1,7 +1,16 @@
 import { Button } from '@chakra-ui/button'
 import { Image } from '@chakra-ui/image'
-import { Flex, Heading, HStack, Spacer, Text, VStack } from '@chakra-ui/layout'
+import {
+  Flex,
+  Heading,
+  HStack,
+  Link,
+  Spacer,
+  Text,
+  VStack
+} from '@chakra-ui/layout'
 import { Tag } from '@chakra-ui/tag'
+import NextLink from 'next/link'
 import { BoxIcon } from 'components/Icons'
 import AWS from 'aws-sdk'
 
@@ -111,6 +120,7 @@ const handleClick = () => {
 
 interface ProjectCardProps {
   name: string
+  id: string
   description: string
   image?: string
   categories?: string[]
@@ -119,6 +129,7 @@ interface ProjectCardProps {
 const ProjectCard = ({
   name,
   description,
+  id,
   image,
   categories,
   info
@@ -151,9 +162,11 @@ const ProjectCard = ({
         <VStack spacing="10px" align="flex-start">
           <HStack spacing="16px" pb="16px">
             <BoxIcon w="24px" h="24px" color="gray.500" />
-            <Heading variant="lg" color="blue.800">
-              {name}
-            </Heading>
+            <Link as={NextLink} href={`/projects/${id}`}>
+              <Heading variant="lg" color="blue.800">
+                {name}
+              </Heading>
+            </Link>
           </HStack>
           <Text fontSize="md" lineHeight={6} color="gray.500">
             {description}

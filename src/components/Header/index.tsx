@@ -72,12 +72,11 @@ const Header = () => {
             </Box>
           </Link>
           <HStack spacing="36px" flex="1" pl="60px">
-            {currentUser &&
-              navigation.map((nav) => (
-                <Link as={NextLink} href={nav.href} key={nav.href}>
-                  {nav.label}
-                </Link>
-              ))}
+            {navigation.map((nav) => (
+              <Link as={NextLink} href={nav.href} key={nav.href}>
+                {nav.label}
+              </Link>
+            ))}
           </HStack>
           <HStack spacing="32px">
             {linkAuthPage ? (
