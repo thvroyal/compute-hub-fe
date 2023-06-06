@@ -3,4 +3,5 @@ export interface Project {
   folder: string
   name: string
   categories: string[]
+  port: string
 }
