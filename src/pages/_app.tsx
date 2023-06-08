@@ -42,10 +42,6 @@ function MyApp({ Component, ...rest }: AppProps) {
           name="description"
           content="Compute Hub - Volunteer Computing Central"
         />
-        <meta
-          httpEquiv="Content-Security-Policy"
-          content="upgrade-insecure-requests"
-        ></meta>
       </Head>
       <Provider store={store}>
         <Header />
