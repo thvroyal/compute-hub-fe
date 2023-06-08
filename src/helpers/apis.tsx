@@ -88,3 +88,46 @@ export const createProject = async (data: FormData) => {
     }
   }
 }
+
+interface GetProjectsQuery {
+  name?: string
+  id?: string
+}
+interface GetProjectsOptions {
+  limit?: number
+  page?: number
+  sortBy?: string
+}
+export const getProjects = async (
+  query?: GetProjectsQuery,
+  options?: GetProjectsOptions
+) => {
+  try {
+    const response = await axios.get('/projects', {
+      params: {
+        ...query,
+        ...options
+      }
+    })
+    return { data: response.data, error: null }
+  } catch (error) {
+    const baseError = error as AxiosError<{ message: string }>
+    return {
+      error: baseError.response?.data.message || baseError.message,
+      data: null
+    }
+  }
+}
+
+export const getProjectById = async (id: string) => {
+  try {
+    const response = await axios.get(`/projects/${id}`)
+    return { data: response.data, error: null }
+  } catch (error) {
+    const baseError = error as AxiosError<{ message: string }>
+    return {
+      error: baseError.response?.data.message || baseError.message,
+      data: null
+    }
+  }
+}

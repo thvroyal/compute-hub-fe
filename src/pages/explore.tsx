@@ -2,8 +2,12 @@ import { Flex, Text } from '@chakra-ui/layout'
 import Container from 'components/Container'
 import ProjectCard from 'components/ProjectCard'
 import { Author, Joined, UnprocessedUnit } from 'components/ProjectCard/States'
+import { getProjects } from 'helpers/apis'
+import { GetStaticProps, InferGetStaticPropsType } from 'next'
+import { Project } from 'types/Project'
 
-const Explore = () => {
+const Explore = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
+  const { projects = [] } = props
   return (
     <Container marginBottom="60px">
       <Flex
@@ -15,49 +19,46 @@ const Explore = () => {
         <Text fontSize="4xl" lineHeight={10} fontWeight="semibold">
           Explore all project are running
         </Text>
-        <ProjectCard
-          name="Amicable Numbers"
-          id="123-tfr-3e4"
-          description="Amicable Numbers is an independent research project that uses Internet-connected computers to find new amicable pairs. You can contribute to our research by running a free program on your computer."
-          categories={['Mathematics', 'Computing', 'Games']}
-          info={[
-            <Author
-              name="thvroyal"
-              avatarSrc="https://avatars.githubusercontent.com/u/44036562?v=4"
-              key="author"
-            />,
-            <UnprocessedUnit
-              key="unprocessed"
-              currentValue={6000}
-              total={10000}
-            />,
-            <Joined key="joined" joined={96} />
-          ]}
-        />
-
-        <ProjectCard
-          name="Amicable Numbers"
-          id="123-e4r-3e4"
-          description="Amicable Numbers is an independent research project that uses Internet-connected computers to find new amicable pairs. You can contribute to our research by running a free program on your computer."
-          categories={['Mathematics', 'Computing', 'Games']}
-          info={[
-            <Author
-              name="thvroyal"
-              avatarSrc="https://avatars.githubusercontent.com/u/44036562?v=4"
-              key="author"
-            />,
-            <UnprocessedUnit
-              key="unprocessed"
-              currentValue={6000}
-              total={10000}
-            />,
-            <Joined key="joined" joined={96} />
-          ]}
-          image="https://avatars.githubusercontent.com/u/7575757?v=4"
-        />
+        {!!projects &&
+          projects.map((project) => (
+            <ProjectCard
+              key={project.id}
+              name={project.name}
+              id={project.id}
+              description="Amicable Numbers is an independent research project that uses Internet-connected computers to find new amicable pairs. You can contribute to our research by running a free program on your computer."
+              categories={project.categories}
+              info={[
+                <Author
+                  name="thvroyal"
+                  avatarSrc="https://avatars.githubusercontent.com/u/44036562?v=4"
+                  key="author"
+                />,
+                <UnprocessedUnit
+                  key="unprocessed"
+                  currentValue={6000}
+                  total={10000}
+                />,
+                <Joined key="joined" joined={96} />
+              ]}
+            />
+          ))}
       </Flex>
     </Container>
   )
 }
 
 export default Explore
+
+export const getStaticProps: GetStaticProps<{
+  projects?: Project[]
+}> = async () => {
+  const { data } = await getProjects()
+  if (data) {
+    return {
+      props: { projects: [...data.projects] }
+    }
+  }
+  return {
+    props: {}
+  }
+}

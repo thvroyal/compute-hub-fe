@@ -44,7 +44,7 @@ const CreateProject = () => {
         title: 'Create project successfully',
         status: 'success'
       })
-      router.push(`/projects/${data.id}`)
+      router.push(`/projects/${data.project.id}`)
     } else {
       toast({
         title: 'Create project failed',

@@ -11,9 +11,11 @@ import {
 } from '@chakra-ui/react'
 import Container from 'components/Container'
 import { ThreeDotIcon } from 'components/Icons'
+import { getProjectById, getProjects } from 'helpers/apis'
 import { getMarkdownFileContent } from 'libs/markdown'
 import { GetStaticProps, InferGetStaticPropsType } from 'next'
 import path from 'path'
+import { Project } from 'types/Project'
 
 const detailData = [
   {
@@ -41,7 +43,8 @@ const detailData = [
 const DetailProject = (
   props: InferGetStaticPropsType<typeof getStaticProps>
 ) => {
-  const { description } = props
+  const { description, project } = props
+  const { name } = project
   return (
     <Container>
       <Grid w="full" templateColumns="repeat(8, 1fr)">
@@ -55,7 +58,7 @@ const DetailProject = (
           <VStack spacing="32px">
             <Flex align="center" justify="space-between" w="full">
               <Heading as="h2" size="lg" color="gray.800">
-                Amicable Numbers
+                {name}
               </Heading>
               <IconButton aria-label="more options" icon={<ThreeDotIcon />} />
             </Flex>
@@ -116,21 +119,28 @@ const DetailProject = (
 
 export default DetailProject
 
-export const getStaticProps: GetStaticProps = async (context) => {
+export const getStaticProps: GetStaticProps<{
+  description: { contentHtml: string }
+  project: Project
+}> = async (context) => {
   const { projectId } = context.params || {}
-  console.log(projectId)
+  const { data } = await getProjectById(projectId as string)
   const filename = path.join(process.cwd(), 'README.md')
   const description = await getMarkdownFileContent(filename)
   return {
     props: {
-      description
+      description,
+      project: data || ({} as Project)
     }
   }
 }
 
 export async function getStaticPaths() {
-  // mock data, will be replaced by real data
-  const paths = [{ params: { projectId: '123-tfr-3e4' } }]
+  const { data } = await getProjects()
+  const projects = data?.projects || []
+  const paths = projects.map((project: Project) => ({
+    params: { projectId: project.id }
+  }))
 
-  return { paths, fallback: false }
+  return { paths, fallback: true }
 }
