@@ -16,7 +16,6 @@ import {
   useToast
 } from '@chakra-ui/react'
 import Container from 'components/Container'
-import DarkModeSwitch from 'components/DarkModeSwitch'
 import { PlusIcon } from 'components/Icons'
 import Logo from 'components/Logo'
 import { logout } from 'helpers/apis'
@@ -111,11 +110,11 @@ const Header = () => {
                     <MenuItem>Profile</MenuItem>
                     <MenuItem>Activities </MenuItem>
                     <MenuDivider />
-                    <MenuItem>
+                    {/* <MenuItem>
                       <Flex align="center" justify="space-between" w="full">
                         Dark mode <DarkModeSwitch />
                       </Flex>
-                    </MenuItem>
+                    </MenuItem> */}
                     <MenuItem onClick={handleLogOut}>Logout</MenuItem>
                   </MenuList>
                 </Portal>

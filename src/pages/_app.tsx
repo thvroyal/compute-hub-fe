@@ -8,10 +8,27 @@ import Script from 'next/script'
 import Footer from 'components/Footer'
 import Header from 'components/Header'
 import theme from 'theme'
+import { Router } from 'next/router'
+import { useEffect } from 'react'
+import nProgress from 'nprogress'
 
 function MyApp({ Component, ...rest }: AppProps) {
   const { store, props } = wrapper.useWrappedStore(rest)
   const { pageProps } = props
+
+  useEffect(() => {
+    Router.events.on('routeChangeStart', () => {
+      nProgress.start()
+    })
+
+    Router.events.on('routeChangeComplete', () => {
+      nProgress.done()
+    })
+
+    Router.events.on('routeChangeError', () => {
+      nProgress.done()
+    })
+  }, [])
 
   return (
     <ChakraProvider
