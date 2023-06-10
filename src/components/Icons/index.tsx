@@ -103,3 +103,14 @@ export const ThreeDotIcon = createIcon({
     />
   )
 })
+
+export const BurgerIcon = createIcon({
+  displayName: 'BurgerIcon',
+  viewBox: '0 0 24 24',
+  path: (
+    <path
+      fill="currentColor"
+      d="M21 18H3v-2h18v2Zm0-5H3v-2h18v2Zm0-5H3V6h18v2Z"
+    />
+  )
+})

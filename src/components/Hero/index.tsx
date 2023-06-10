@@ -66,7 +66,7 @@ const Hero = ({
           </HStack>
         </Flex>
       </GridItem>
-      <GridItem display={['none', 'block']}>
+      <GridItem display={{ base: 'none', md: 'block' }}>
         <video
           autoPlay
           loop
