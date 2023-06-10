@@ -96,7 +96,7 @@ const ProjectCard = ({
           size="xs"
           variant="solid"
           bgColor="blackAlpha.200"
-          onClick={handleClick}
+          // onClick={handleClick}
         >
           Join to project
         </Button>

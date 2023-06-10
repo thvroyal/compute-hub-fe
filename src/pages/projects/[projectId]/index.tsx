@@ -11,11 +11,13 @@ import {
 } from '@chakra-ui/react'
 import Container from 'components/Container'
 import { ThreeDotIcon } from 'components/Icons'
-import { getProjectById, getProjects } from 'helpers/apis'
 import { getMarkdownFileContent } from 'libs/markdown'
 import { GetStaticProps, InferGetStaticPropsType } from 'next'
-import path from 'path'
+import { getProjectById, getProjects } from 'helpers/apis'
 import { Project } from 'types/Project'
+import { useState } from 'react'
+import path from 'path'
+import handleRun from 'libs/aws'
 
 const detailData = [
   {
@@ -44,7 +46,26 @@ const DetailProject = (
   props: InferGetStaticPropsType<typeof getStaticProps>
 ) => {
   const { description, project } = props
-  const { name } = project
+  const { name, port } = project
+  const [isStart, setStart] = useState(false)
+
+  const startRun = () => {
+    eval(`start()`)
+  }
+
+  const handleClick = async () => {
+    try {
+      await handleRun(startRun, port)
+      setStart(true)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const handleCloseClick = () => {
+    location.reload()
+  }
+
   return (
     <Container>
       <Grid w="full" templateColumns="repeat(8, 1fr)">
@@ -93,14 +114,30 @@ const DetailProject = (
               ))}
             </VStack>
             {/* Actions */}
-            <HStack w="full" spacing="36px">
-              <Button variant="solid" colorScheme="blue" w="full">
-                Join project
+            {isStart ? (
+              <Button
+                variant="solid"
+                colorScheme="red"
+                w="full"
+                onClick={handleCloseClick}
+              >
+                Stop
               </Button>
-              <Button variant="outline" colorScheme="gray" w="full">
-                View analytics
-              </Button>
-            </HStack>
+            ) : (
+              <HStack w="full" spacing="36px">
+                <Button
+                  variant="solid"
+                  colorScheme="blue"
+                  w="full"
+                  onClick={handleClick}
+                >
+                  Join project
+                </Button>
+                <Button variant="outline" colorScheme="gray" w="full">
+                  View analytics
+                </Button>
+              </HStack>
+            )}
           </VStack>
         </GridItem>
         <GridItem
