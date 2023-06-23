@@ -42,13 +42,6 @@ function MyApp({ Component, ...rest }: AppProps) {
         }
       }}
     >
-      <Script
-        src="/static/simplewebsocket.min.js"
-        strategy="beforeInteractive"
-      />
-      <Script src="/static/volunteer.js" strategy="beforeInteractive" />
-      <Script src="/static/config.js" strategy="beforeInteractive" />
-      <Script src="/static/connect.js" strategy="beforeInteractive" />
       <Head>
         <title>Compute Hub</title>
         <link rel="shortcut icon" href="/img/computer_hub_icon.png" />

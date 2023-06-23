@@ -14,6 +14,7 @@ import { ThreeDotIcon } from 'components/Icons'
 import { getProjectById, getProjects } from 'helpers/apis'
 import { getMarkdownFileContent } from 'libs/markdown'
 import { GetStaticProps, InferGetStaticPropsType } from 'next'
+import { useRouter } from 'next/router'
 import path from 'path'
 import { Project } from 'types/Project'
 
@@ -43,8 +44,14 @@ const detailData = [
 const DetailProject = (
   props: InferGetStaticPropsType<typeof getStaticProps>
 ) => {
+  const router = useRouter()
   const { description, project } = props
   const { name } = project
+
+  const clickRunButton = () => {
+    router.push({ pathname: `/projects/${project.id}/run` })
+  }
+
   return (
     <Container>
       <Grid w="full" templateColumns="repeat(8, 1fr)">
@@ -94,7 +101,12 @@ const DetailProject = (
             </VStack>
             {/* Actions */}
             <HStack w="full" spacing="36px">
-              <Button variant="solid" colorScheme="blue" w="full">
+              <Button
+                variant="solid"
+                colorScheme="blue"
+                w="full"
+                onClick={clickRunButton}
+              >
                 Join project
               </Button>
               <Button variant="outline" colorScheme="gray" w="full">
@@ -108,7 +120,6 @@ const DetailProject = (
           p="32px 0px 48px 48px"
           borderLeft="1px solid"
           borderColor="blackAlpha.200"
-          height={1920}
         >
           <div dangerouslySetInnerHTML={{ __html: description.contentHtml }} />
         </GridItem>

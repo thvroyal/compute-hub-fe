@@ -25,7 +25,8 @@
     "incremental": true
   },
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "libs/volunteer.js"
   ],
   "include": [
     "next-env.d.ts",
