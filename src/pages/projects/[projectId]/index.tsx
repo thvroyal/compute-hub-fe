@@ -52,6 +52,10 @@ const DetailProject = (
     router.push({ pathname: `/projects/${project.id}/run` })
   }
 
+  const clickAnalyticsButton = () => {
+    router.push({ pathname: `/projects/${project.id}/analytics` })
+  }
+
   return (
     <Container>
       <Grid w="full" templateColumns="repeat(8, 1fr)">
@@ -109,7 +113,12 @@ const DetailProject = (
               >
                 Join project
               </Button>
-              <Button variant="outline" colorScheme="gray" w="full">
+              <Button
+                variant="outline"
+                colorScheme="gray"
+                w="full"
+                onClick={clickAnalyticsButton}
+              >
                 View analytics
               </Button>
             </HStack>

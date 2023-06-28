@@ -3,7 +3,6 @@ import { AppProps } from 'next/app'
 import Head from 'next/head'
 import { Provider } from 'react-redux'
 import { wrapper } from 'store/store'
-import Script from 'next/script'
 
 import Footer from 'components/Footer'
 import Header from 'components/Header'

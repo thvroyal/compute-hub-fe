@@ -13,6 +13,12 @@ const styles = {
       left: 0,
       width: '100%',
       height: '4px'
+    },
+
+    '.log': {
+      fontFamily:
+        '"Roboto Mono",Menlo,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New,monospace',
+      fontSize: '14px'
     }
   }
 }

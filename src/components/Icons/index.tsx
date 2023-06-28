@@ -114,3 +114,23 @@ export const BurgerIcon = createIcon({
     />
   )
 })
+
+export const DotIcon = createIcon({
+  displayName: 'DotIcon',
+  viewBox: '0 0 12 12',
+  path: <circle cx="6" cy="6" r="6" fill="currentColor" />
+})
+
+export const LoadingIcon = createIcon({
+  displayName: 'LoadingIcon',
+  viewBox: '0 0 24 24',
+  path: (
+    <path
+      d="M12.3335 2V4M17.3335 3.34L16.3335 5.072M20.9935 7L19.2615 8M22.3335 12H20.3335M20.9935 17L19.2615 16M17.3335 20.66L16.3335 18.928M12.3335 22V20M7.3335 20.66L8.3335 18.928M3.6735 17L5.4055 16M2.3335 12H4.3335M3.6735 7L5.4055 8M7.3335 3.34L8.3335 5.072"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  )
+})

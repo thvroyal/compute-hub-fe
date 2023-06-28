@@ -9,3 +9,23 @@ export const getSize = (size: number) => {
     return `${(size / 1073741824).toFixed(2)} GB`
   }
 }
+
+export const formatStopWatch = ({
+  seconds,
+  minutes,
+  hours
+}: {
+  seconds: number
+  minutes: number
+  hours: number
+}) => {
+  let value = ''
+  if (hours > 0) {
+    value += `${hours}h `
+  }
+  if (minutes > 0) {
+    value += `${minutes}m `
+  }
+  value += `${seconds}s`
+  return value
+}

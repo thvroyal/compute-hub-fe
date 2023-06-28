@@ -1,10 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button, Flex, Heading, Text, VStack } from '@chakra-ui/react'
 import Container from 'components/Container'
+import DataWithLabel from 'components/DataWithLabel'
+import { DotIcon, LoadingIcon } from 'components/Icons'
 import { Author } from 'components/ProjectCard/States'
+import Logs, { LogsProps } from 'components/Table/Logs'
 import { getPresignedUrl } from 'libs/aws'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import Script from 'next/script'
 import { useEffect, useState } from 'react'
+import { useStopwatch } from 'react-timer-hook'
+import animations from 'theme/animations'
+import { formatStopWatch } from 'utils/formatData'
 
 declare global {
   interface Window {
@@ -13,35 +20,20 @@ declare global {
   }
 }
 
-const DataWithLabel = ({
-  label,
-  value,
-  customComponent
-}: {
-  label: string
-  value: React.ReactNode
-  customComponent?: React.ReactNode
-}) => {
-  return (
-    <VStack spacing="8px" align="start" w="full">
-      <Text
-        textTransform="uppercase"
-        fontSize="sm"
-        color="gray.500"
-        fontWeight="medium"
-        lineHeight={5}
-      >
-        {label}
-      </Text>
-      {customComponent ? (
-        customComponent
-      ) : (
-        <Text fontSize="md" color="gray.900" fontWeight="medium" w="full">
-          {value}
-        </Text>
-      )}
-    </VStack>
-  )
+enum Status {
+  LOADING = 'Loading bundle...',
+  DISCONNECTED = 'Disconnected',
+  RUNNING = 'Running',
+  ERROR = 'Error',
+  READY = 'Ready'
+}
+
+const statusColor = {
+  [Status.LOADING]: 'gray.500',
+  [Status.DISCONNECTED]: 'red.500',
+  [Status.RUNNING]: 'green.500',
+  [Status.ERROR]: 'red.500',
+  [Status.READY]: 'yellow.500'
 }
 
 const MAX_SCRIPTS = 2
@@ -49,9 +41,11 @@ const MAX_SCRIPTS = 2
 const RunProject = ({
   bundleFile
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
-  const [starting, setStarting] = useState<boolean>(false)
   const [restarting, setRestarting] = useState<boolean>(false)
-  let numOfScriptLoaded = 0
+  const [status, setStatus] = useState<Status>(Status.LOADING)
+  const [numOfScriptLoaded, setNumOfScriptLoaded] = useState<number>(0)
+  const { seconds, minutes, hours, start: startStopWatch } = useStopwatch()
+
   let processor: any = null
   let connectTimeout: any
 
@@ -61,7 +55,7 @@ const RunProject = ({
       setRestarting(true)
       if (processor) {
         processor.close()
-        setStarting(false)
+        setStatus(Status.DISCONNECTED)
       }
       processor = null
     }
@@ -79,17 +73,19 @@ const RunProject = ({
       })
 
       processor.on('close', () => {
-        setStarting(false)
+        setStatus(Status.DISCONNECTED)
         console.log('closed')
       })
 
       processor.on('error', (err: any) => {
         restart()
+        setStatus(Status.ERROR)
         console.log(err)
       })
 
       processor.on('ready', () => {
-        setStarting(true)
+        setStatus(Status.RUNNING)
+        startStopWatch()
         clearTimeout(connectTimeout)
       })
 
@@ -111,12 +107,52 @@ const RunProject = ({
   const handleClick = async () => {
     if (numOfScriptLoaded === MAX_SCRIPTS) {
       start()
+
+      // // for testing only UI
+      // startStopWatch()
+      // setStatus(Status.RUNNING)
     }
   }
 
   const handleScriptLoad = () => {
-    numOfScriptLoaded += 1
+    setNumOfScriptLoaded((prev) => prev + 1)
   }
+
+  useEffect(() => {
+    if (numOfScriptLoaded === MAX_SCRIPTS) {
+      setStatus(Status.READY)
+    }
+  }, [numOfScriptLoaded])
+
+  const starting = status === Status.RUNNING
+  const timer = formatStopWatch({ seconds, minutes, hours })
+  const logs: LogsProps['data'] = [
+    {
+      timestamp: '17:52:48.440',
+      message: 'Running build in Washington, D.C., USA (East) – iad1'
+    },
+    {
+      timestamp: '17:52:48.440',
+      message:
+        'Cloning github.com/thvroyal/compute-hub-fe (Branch: main, Commit: 942f608)'
+    },
+    {
+      timestamp: '17:52:48.440',
+      message:
+        'Cloning github.com/thvroyal/compute-hub-fe (Branch: main, Commit: 942f608)'
+    },
+    {
+      timestamp: '17:52:48.440',
+      message:
+        'Cloning github.com/thvroyal/compute-hub-fe (Branch: main, Commit: 942f608)'
+    },
+    {
+      timestamp: '17:52:48.440',
+      type: 'error',
+      message:
+        'Cloning github.com/thvroyal/compute-hub-fe (Branch: main, Commit: 942f608)'
+    }
+  ]
 
   return (
     <>
@@ -142,9 +178,40 @@ const RunProject = ({
           </Flex>
           <VStack spacing="24px" w="min(100%, 500px)">
             <Flex justify="space-between" w="full">
-              <DataWithLabel label="Status" value="Connected" />
+              <DataWithLabel
+                label="Status"
+                value={status}
+                valueProps={{ color: statusColor[status] }}
+                leftAdornment={
+                  <DotIcon
+                    w="12px"
+                    h="12px"
+                    color={statusColor[status]}
+                    animation={
+                      status === Status.RUNNING
+                        ? `${animations.flash} 1s infinite linear reverse`
+                        : ''
+                    }
+                  />
+                }
+              />
               <DataWithLabel label="Platform" value="100" />
-              <DataWithLabel label="Duration" value="100" />
+              <DataWithLabel
+                label="Duration"
+                value={timer}
+                rightAdornment={
+                  starting ? (
+                    <LoadingIcon
+                      color="gray.500"
+                      animation={
+                        starting
+                          ? `${animations.rotation} 4s infinite linear`
+                          : ''
+                      }
+                    />
+                  ) : undefined
+                }
+              />
             </Flex>
             <DataWithLabel
               label="Url"
@@ -156,13 +223,14 @@ const RunProject = ({
             w="full"
             flex="1"
             minW="150px"
-            colorScheme="blue"
+            colorScheme={starting ? 'red' : 'blue'}
           >
-            Start
+            {starting ? 'Terminate' : 'Start'}
           </Button>
         </Flex>
         <VStack spacing="24px" w="full" mt="60px" align="start">
-          <Heading size="lg">Logs</Heading>
+          <Heading size="md">Computing Logs</Heading>
+          <Logs data={logs} tableContainerProps={{ maxH: '500px' }} />
         </VStack>
       </Container>
     </>
@@ -175,6 +243,7 @@ export const getServerSideProps: GetServerSideProps<{
   bundleFile: string | undefined
 }> = async (context) => {
   const { projectId } = context.params || {}
+  console.log(projectId)
   const bundleFile = await getPresignedUrl('123_456/source.js')
   return {
     props: {

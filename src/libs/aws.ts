@@ -1,10 +1,5 @@
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import { fromEnv } from '@aws-sdk/credential-providers'
-import { HttpRequest } from '@aws-sdk/protocol-http'
-import { getSignedUrl, S3RequestPresigner } from '@aws-sdk/s3-request-presigner'
-import { parseUrl } from '@aws-sdk/url-parser'
-import { formatUrl } from '@aws-sdk/util-format-url'
-import { Hash } from '@aws-sdk/hash-node'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 // export const getAWSData = (projectID: string) => {
 //   AWS.config.update({
@@ -85,31 +80,6 @@ interface S3_URL {
   region: string
   bucket: string
   key: string
-}
-/**
- *
- * return presigned url from aws s3 without client
- *
- * @param region
- * @param bucket
- * @param key
- * @returns
- *
- */
-const createPresignedUrlWithoutClient = async ({
-  region,
-  bucket,
-  key
-}: S3_URL) => {
-  const url = parseUrl(`https://${bucket}.s3.${region}.amazonaws.com/${key}`)
-  const presigner = new S3RequestPresigner({
-    credentials: fromEnv(),
-    region,
-    sha256: Hash.bind(null, 'sha256')
-  })
-
-  const signedUrlObject = await presigner.presign(new HttpRequest(url))
-  return formatUrl(signedUrlObject)
 }
 
 const createPresignedUrlWithClient = ({ region, bucket, key }: S3_URL) => {
