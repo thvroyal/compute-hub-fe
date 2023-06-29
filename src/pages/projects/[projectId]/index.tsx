@@ -46,7 +46,8 @@ const DetailProject = (
 ) => {
   const router = useRouter()
   const { description, project } = props
-  const { name } = project
+  const { name } = project || {}
+  const { contentHtml } = description || {}
 
   const clickRunButton = () => {
     router.push({ pathname: `/projects/${project.id}/run` })
@@ -130,7 +131,7 @@ const DetailProject = (
           borderLeft="1px solid"
           borderColor="blackAlpha.200"
         >
-          <div dangerouslySetInnerHTML={{ __html: description.contentHtml }} />
+          <div dangerouslySetInnerHTML={{ __html: contentHtml }} />
         </GridItem>
       </Grid>
     </Container>
