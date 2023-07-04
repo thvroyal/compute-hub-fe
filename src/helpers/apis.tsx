@@ -2,6 +2,7 @@ import axios, { AxiosError } from 'axios'
 
 axios.defaults.baseURL = process.env.NEXT_PUBLIC_BASE_URL
 axios.defaults.withCredentials = true
+axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*'
 
 // enum STATUS {
 //   SUCCESS = 200,
