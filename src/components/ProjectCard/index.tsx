@@ -17,14 +17,14 @@ import { useRouter } from 'next/router'
 interface ProjectCardProps {
   name: string
   id: string
-  description: string
+  summary: string
   image?: string
   categories?: string[]
   info?: React.ReactNode[]
 }
 const ProjectCard = ({
   name,
-  description,
+  summary,
   id,
   image,
   categories,
@@ -70,14 +70,14 @@ const ProjectCard = ({
             </Link>
           </HStack>
           <Text fontSize="md" lineHeight={6} color="gray.500">
-            {description}
+            {summary}
           </Text>
           <HStack spacing="10px" py="16px">
-            {categories?.map((category) => (
+            {/* {categories?.map((category) => (
               <Tag key={category} size="md" variant="subtle" colorScheme="blue">
                 {category}
               </Tag>
-            ))}
+            ))} */}
           </HStack>
         </VStack>
       </Flex>

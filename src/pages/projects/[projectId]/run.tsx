@@ -65,8 +65,9 @@ const RunProject = ({
     processor = null
     setTimeout(() => {
       console.log('connecting over WebSocket')
-      const url = 'ws://192.168.0.199:8000/volunteer'
+      const url = 'ws://localhost:8000/volunteer'
       processor = window.volunteer['websocket'](url, window.bundle)
+      console.log(window)
 
       processor.on('status', (summary: any) => {
         console.log(summary)

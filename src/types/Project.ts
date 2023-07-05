@@ -3,4 +3,10 @@ export interface Project {
   folder: string
   name: string
   categories: string[]
+  description: string
+  summary: string
+  computeQuantity: number
+  processedQuantity: number
+  contributors: []
+  authors: string[]
 }
