@@ -66,7 +66,9 @@ const nextAuthOptions: (req: any, res: any) => NextAuthOptions = (
       signOut: async () => {
         console.log('signing out')
       }
-    }
+    },
+
+    secret: process.env.NEXTAUTH_SECRET
   }
 }
 
