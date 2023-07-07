@@ -21,13 +21,13 @@ const nextAuthOptions: (req: any, res: any) => NextAuthOptions = (
           if (!credentials) {
             return null
           }
-          const { data } = await login({
+          const { data, error } = await login({
             email: credentials.email,
             password: credentials.password
           })
-          const user = { ...data?.user, ...data?.tokens }
 
-          if (user) {
+          if (!error) {
+            const user = { ...data?.user, ...data?.tokens }
             setCookie({ res }, 'accessToken', data?.tokens.access.token, {
               maxAge: 30 * 60 * 60,
               path: '/',
@@ -44,7 +44,7 @@ const nextAuthOptions: (req: any, res: any) => NextAuthOptions = (
     callbacks: {
       async jwt({ token, user }) {
         // Persist the OAuth access_token to the token right after signin
-        if (user) {
+        if (user.access) {
           token.accessToken = user.access.token
           token.refreshToken = user.refresh.token
         }
@@ -52,14 +52,21 @@ const nextAuthOptions: (req: any, res: any) => NextAuthOptions = (
       },
       async session({ session, token }) {
         // Send properties to the client, like an access_token from a provider.
-        session.accessToken = token.accessToken
-        session.refreshToken = token.refreshToken
+        if (token) {
+          session.accessToken = token.accessToken
+          session.refreshToken = token.refreshToken
+        }
         return session
       }
     },
 
     pages: {
-      signIn: '/login'
+      signIn: '/login',
+      error: '/login'
+    },
+
+    session: {
+      strategy: 'jwt'
     },
 
     events: {

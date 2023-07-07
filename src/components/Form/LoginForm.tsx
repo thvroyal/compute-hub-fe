@@ -8,10 +8,8 @@ import {
 } from '@chakra-ui/form-control'
 import { Input } from '@chakra-ui/input'
 import { Text, VStack } from '@chakra-ui/layout'
-import { useToast } from '@chakra-ui/react'
 import { signIn } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
-import { useRouter } from 'next/router'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -20,8 +18,6 @@ interface FormValues {
   password: string
 }
 const LoginForm = () => {
-  const toast = useToast()
-  const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState<boolean>(false)
   const {
@@ -33,24 +29,14 @@ const LoginForm = () => {
   const onSubmit = handleSubmit(async (values) => {
     setLoading(true)
 
-    const response = await signIn('credentials', {
+    await signIn('credentials', {
       email: values.email,
       password: values.password,
-      redirect: false,
+      redirect: true,
       callbackUrl: searchParams?.get('next') || '/explore'
     })
 
     setLoading(false)
-
-    if (!response?.ok) {
-      return toast({
-        title: 'Login failed',
-        description: response?.error,
-        status: 'error'
-      })
-    } else {
-      response.url && router.push(response?.url)
-    }
   })
 
   return (

@@ -1,10 +1,10 @@
-import { getToken } from 'next-auth/jwt'
 import { withAuth } from 'next-auth/middleware'
 import { NextResponse } from 'next/server'
 
 export default withAuth(
   async function middleware(req) {
-    const token = await getToken({ req })
+    const url = req.nextUrl.clone()
+    const token = req.nextauth.token
     const isAuth = !!token
     const isAuthPage =
       req.nextUrl.pathname.startsWith('/login') ||
@@ -12,7 +12,8 @@ export default withAuth(
 
     if (isAuthPage) {
       if (isAuth) {
-        return NextResponse.redirect(new URL('/explore', req.url))
+        url.pathname = '/explore'
+        return NextResponse.redirect(url.toString())
       }
 
       return null
@@ -23,10 +24,9 @@ export default withAuth(
       if (req.nextUrl.search) {
         next += req.nextUrl.search
       }
-
-      return NextResponse.redirect(
-        new URL(`/login?next=${encodeURIComponent(next)}`, req.url)
-      )
+      url.pathname = `/login`
+      url.search = `?next=${encodeURIComponent(next)}`
+      return NextResponse.redirect(url.toString())
     }
   },
   {
