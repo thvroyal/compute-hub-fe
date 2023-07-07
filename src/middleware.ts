@@ -1,45 +1,45 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { AUTH_PAGES } from 'utils/constants'
-import { verifyJwtToken } from './libs/auth'
+import { getToken } from 'next-auth/jwt'
+import { withAuth } from 'next-auth/middleware'
+import { NextResponse } from 'next/server'
 
-const isAuthPages = (url: string) =>
-  AUTH_PAGES.some((page) => page.startsWith(url))
+export default withAuth(
+  async function middleware(req) {
+    const token = await getToken({ req })
+    const isAuth = !!token
+    const isAuthPage =
+      req.nextUrl.pathname.startsWith('/login') ||
+      req.nextUrl.pathname.startsWith('/register')
 
-export async function middleware(request: NextRequest) {
-  const { url, nextUrl, cookies } = request
-  const { value: token } = cookies.get('accessToken') ?? { value: null }
+    if (isAuthPage) {
+      if (isAuth) {
+        return NextResponse.redirect(new URL('/explore', req.url))
+      }
 
-  const hasVerifiedToken =
-    token && (await verifyJwtToken(token).catch((error) => console.log(error)))
-  const isAuthPageRequested = isAuthPages(nextUrl.pathname)
-
-  if (isAuthPageRequested) {
-    if (!hasVerifiedToken) {
-      const response = NextResponse.next()
-      response.cookies.delete('accessToken')
-      response.cookies.delete('refreshToken')
-      return response
+      return null
     }
 
-    const response = NextResponse.redirect(new URL(`/`, url))
-    return response
+    if (!isAuth) {
+      let from = req.nextUrl.pathname
+      if (req.nextUrl.search) {
+        from += req.nextUrl.search
+      }
+
+      return NextResponse.redirect(
+        new URL(`/login?next=${encodeURIComponent(from)}`, req.url)
+      )
+    }
+  },
+  {
+    callbacks: {
+      async authorized() {
+        // This is a work-around for handling redirect on auth pages.
+        // We return true here so that the middleware function above
+        // is always called.
+        return true
+      }
+    }
   }
-
-  if (!hasVerifiedToken) {
-    const searchParams = new URLSearchParams(nextUrl.searchParams)
-    searchParams.set('next', nextUrl.pathname)
-
-    const response = NextResponse.redirect(
-      new URL(`/login?${searchParams}`, url)
-    )
-    response.cookies.delete('accessToken')
-    response.cookies.delete('refreshToken')
-
-    return response
-  }
-
-  return NextResponse.next()
-}
+)
 
 export const config = {
   matcher: [

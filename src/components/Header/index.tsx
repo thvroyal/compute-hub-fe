@@ -31,10 +31,11 @@ import { logout } from 'helpers/apis'
 import { useAppDispatch, useAppSelector } from 'hooks/store'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
-import { useRef } from 'react'
+import { MouseEventHandler, useRef } from 'react'
 import { clearCurrentUser, selectCurrentUser } from 'store/slices/authSlice'
 import { AUTH_PAGES } from 'utils/constants'
 import { navigation } from './constant'
+import { signOut } from 'next-auth/react'
 
 const Header = () => {
   const { colorMode } = useColorMode()
@@ -59,18 +60,11 @@ const Header = () => {
     router.push(linkAuthPage || '/login')
   }
 
-  const handleLogOut = async () => {
-    const { error } = await logout()
-    if (!error) {
-      dispatch(clearCurrentUser())
-      router.push('/login')
-    } else {
-      toast({
-        title: 'Logout failed',
-        description: error,
-        status: 'error'
-      })
-    }
+  const handleLogOut: MouseEventHandler<HTMLButtonElement> = (event) => {
+    event.preventDefault()
+    signOut({
+      callbackUrl: `${window.location.origin}/login`
+    })
   }
 
   const bgColor = { light: 'white', dark: 'gray.900' }
