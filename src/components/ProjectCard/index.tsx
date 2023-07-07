@@ -73,8 +73,13 @@ const ProjectCard = ({
             {description}
           </Text>
           <HStack spacing="10px" py="16px">
-            {categories?.map((category) => (
-              <Tag key={category} size="md" variant="subtle" colorScheme="blue">
+            {categories?.map((category, index) => (
+              <Tag
+                key={`${category}${index}`}
+                size="md"
+                variant="subtle"
+                colorScheme="blue"
+              >
                 {category}
               </Tag>
             ))}

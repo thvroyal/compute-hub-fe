@@ -2,7 +2,6 @@ import axios, { AxiosError } from 'axios'
 
 axios.defaults.baseURL = process.env.NEXT_PUBLIC_BASE_URL
 axios.defaults.withCredentials = true
-axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*'
 
 // enum STATUS {
 //   SUCCESS = 200,
@@ -50,6 +49,7 @@ export const login = async (data: LoginData) => {
 export const logout = async () => {
   try {
     const response = await axios.get('/auth/logout')
+    console.log(response)
     return { data: response.data, error: null }
   } catch (error) {
     const baseError = error as AxiosError<{ message: string }>

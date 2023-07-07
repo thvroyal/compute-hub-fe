@@ -1,3 +1,5 @@
+'use client'
+
 import { Button } from '@chakra-ui/button'
 import {
   FormControl,
@@ -7,12 +9,11 @@ import {
 import { Input } from '@chakra-ui/input'
 import { Text, VStack } from '@chakra-ui/layout'
 import { useToast } from '@chakra-ui/react'
-import { login } from 'helpers/apis'
-import { useAppDispatch } from 'hooks/store'
+import { signIn } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { setCurrentUser } from 'store/slices/authSlice'
 
 interface FormValues {
   email: string
@@ -21,7 +22,7 @@ interface FormValues {
 const LoginForm = () => {
   const toast = useToast()
   const router = useRouter()
-  const dispatch = useAppDispatch()
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState<boolean>(false)
   const {
     register,
@@ -31,23 +32,24 @@ const LoginForm = () => {
 
   const onSubmit = handleSubmit(async (values) => {
     setLoading(true)
-    const { data, error } = await login(values)
-    setLoading(false)
-    if (data) {
-      const { next } = router.query
-      dispatch(setCurrentUser(data.user))
 
-      if (next) {
-        router.push(next as string)
-      } else {
-        router.push('/')
-      }
-    } else {
-      toast({
+    const response = await signIn('credentials', {
+      email: values.email,
+      password: values.password,
+      redirect: false,
+      callbackUrl: searchParams?.get('next') || '/explore'
+    })
+
+    setLoading(false)
+
+    if (!response?.ok) {
+      return toast({
         title: 'Login failed',
-        description: error,
+        description: response?.error,
         status: 'error'
       })
+    } else {
+      response.url && router.push(response?.url)
     }
   })
 
