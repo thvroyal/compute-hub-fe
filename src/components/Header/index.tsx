@@ -21,28 +21,24 @@ import {
   Portal,
   useBreakpointValue,
   useColorMode,
-  useDisclosure,
-  useToast
+  useDisclosure
 } from '@chakra-ui/react'
 import Container from 'components/Container'
 import { BurgerIcon, PlusIcon } from 'components/Icons'
 import Logo from 'components/Logo'
-import { logout } from 'helpers/apis'
-import { useAppDispatch, useAppSelector } from 'hooks/store'
+import { useAppSelector } from 'hooks/store'
+import { signOut } from 'next-auth/react'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { MouseEventHandler, useRef } from 'react'
-import { clearCurrentUser, selectCurrentUser } from 'store/slices/authSlice'
+import { selectCurrentUser } from 'store/slices/authSlice'
 import { AUTH_PAGES } from 'utils/constants'
 import { navigation } from './constant'
-import { signOut } from 'next-auth/react'
 
 const Header = () => {
   const { colorMode } = useColorMode()
-  const toast = useToast()
   const router = useRouter()
   const currentUser = useAppSelector(selectCurrentUser)
-  const dispatch = useAppDispatch()
   const isAuthPage = AUTH_PAGES.includes(router.pathname)
   const linkAuthPage = isAuthPage
     ? AUTH_PAGES.find((page) => page !== router.pathname)

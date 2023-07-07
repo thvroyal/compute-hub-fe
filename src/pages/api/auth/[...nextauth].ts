@@ -3,7 +3,10 @@ import NextAuth, { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { setCookie } from 'nookies'
 
-const nextAuthOptions: (req: any, res: any) => NextAuthOptions = (req, res) => {
+const nextAuthOptions: (req: any, res: any) => NextAuthOptions = (
+  _req,
+  res
+) => {
   return {
     providers: [
       CredentialsProvider({
@@ -13,7 +16,7 @@ const nextAuthOptions: (req: any, res: any) => NextAuthOptions = (req, res) => {
           email: { label: 'Email', type: 'text', placeholder: 'jsmith' },
           password: { label: 'Password', type: 'password' }
         },
-        async authorize(credentials, req) {
+        async authorize(credentials) {
           // Add logic here to look up the user from the credentials supplied
           if (!credentials) {
             return null
