@@ -37,7 +37,8 @@ export default withAuth(
         // is always called.
         return true
       }
-    }
+    },
+    secret: process.env.NEXTAUTH_SECRET
   }
 )
 
