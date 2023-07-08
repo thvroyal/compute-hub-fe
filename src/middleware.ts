@@ -43,11 +43,5 @@ export default withAuth(
 )
 
 export const config = {
-  matcher: [
-    '/login',
-    '/register',
-    '/explore',
-    '/projects/:path*',
-    '/users/:username*'
-  ]
+  matcher: ['/login', '/register', '/projects/:path*', '/users/:username*']
 }

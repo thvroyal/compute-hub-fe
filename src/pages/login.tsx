@@ -1,47 +1,145 @@
-import { Box } from '@chakra-ui/layout'
-import Container from 'components/Container'
-import LoginForm from 'components/Form/LoginForm'
+import {
+  Box,
+  Container,
+  Heading,
+  HStack,
+  Link,
+  Stack,
+  Text
+} from '@chakra-ui/layout'
+import {
+  Button,
+  Checkbox,
+  FormControl,
+  FormErrorMessage,
+  FormLabel,
+  Input
+} from '@chakra-ui/react'
+import { PasswordField } from 'components/Form/PasswordField'
+import Logo from 'components/Logo'
+import { signIn } from 'next-auth/react'
+import NextLink from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+
+interface FormValues {
+  email: string
+  password: string
+}
 
 export default function Login() {
+  const searchParams = useSearchParams()
+  const [loading, setLoading] = useState<boolean>(false)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm<FormValues>()
+
+  const onSubmit = handleSubmit(async (values) => {
+    setLoading(true)
+
+    await signIn('credentials', {
+      email: values.email,
+      password: values.password,
+      redirect: true,
+      callbackUrl: searchParams?.get('next') || '/explore'
+    })
+
+    setLoading(false)
+  })
   return (
-    <Container width="100vw" height="100vh" position="relative">
-      <svg
-        width="1920"
-        height="1080"
-        viewBox="0 0 1920 1080"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M1145.5 540C1145.5 642.449 1062.45 725.5 960 725.5C857.551 725.5 774.5 642.449 774.5 540C774.5 437.551 857.551 354.5 960 354.5C1062.45 354.5 1145.5 437.551 1145.5 540ZM960 726.5C1063 726.5 1146.5 643.001 1146.5 540C1146.5 436.999 1063 353.5 960 353.5C856.999 353.5 773.5 436.999 773.5 540C773.5 643.001 856.999 726.5 960 726.5ZM1272.5 540C1272.5 712.589 1132.59 852.5 960 852.5C787.411 852.5 647.5 712.589 647.5 540C647.5 367.411 787.411 227.5 960 227.5C1132.59 227.5 1272.5 367.411 1272.5 540ZM960 853.5C1133.14 853.5 1273.5 713.141 1273.5 540C1273.5 366.859 1133.14 226.5 960 226.5C786.859 226.5 646.5 366.859 646.5 540C646.5 713.141 786.859 853.5 960 853.5ZM1375.5 540C1375.5 769.474 1189.47 955.5 960 955.5C730.526 955.5 544.5 769.474 544.5 540C544.5 310.526 730.526 124.5 960 124.5C1189.47 124.5 1375.5 310.526 1375.5 540ZM960 956.5C1190.03 956.5 1376.5 770.027 1376.5 540C1376.5 309.973 1190.03 123.5 960 123.5C729.973 123.5 543.5 309.973 543.5 540C543.5 770.027 729.973 956.5 960 956.5ZM1471.5 540C1471.5 822.494 1242.49 1051.5 960 1051.5C677.506 1051.5 448.5 822.494 448.5 540C448.5 257.506 677.506 28.5 960 28.5C1242.49 28.5 1471.5 257.506 1471.5 540ZM960 1052.5C1243.05 1052.5 1472.5 823.046 1472.5 540C1472.5 256.954 1243.05 27.5 960 27.5C676.954 27.5 447.5 256.954 447.5 540C447.5 823.046 676.954 1052.5 960 1052.5ZM1573.5 540C1573.5 878.827 1298.83 1153.5 960 1153.5C621.173 1153.5 346.5 878.827 346.5 540C346.5 201.173 621.173 -73.5 960 -73.5C1298.83 -73.5 1573.5 201.173 1573.5 540ZM960 1154.5C1299.38 1154.5 1574.5 879.379 1574.5 540C1574.5 200.621 1299.38 -74.5 960 -74.5C620.621 -74.5 345.5 200.621 345.5 540C345.5 879.379 620.621 1154.5 960 1154.5ZM1676.5 540C1676.5 935.712 1355.71 1256.5 960 1256.5C564.288 1256.5 243.5 935.712 243.5 540C243.5 144.288 564.288 -176.5 960 -176.5C1355.71 -176.5 1676.5 144.288 1676.5 540ZM960 1257.5C1356.26 1257.5 1677.5 936.264 1677.5 540C1677.5 143.736 1356.26 -177.5 960 -177.5C563.736 -177.5 242.5 143.736 242.5 540C242.5 936.264 563.736 1257.5 960 1257.5ZM1789.5 540C1789.5 998.12 1418.12 1369.5 960 1369.5C501.88 1369.5 130.5 998.12 130.5 540C130.5 81.8798 501.88 -289.5 960 -289.5C1418.12 -289.5 1789.5 81.8798 1789.5 540ZM960 1370.5C1418.67 1370.5 1790.5 998.672 1790.5 540C1790.5 81.3275 1418.67 -290.5 960 -290.5C501.328 -290.5 129.5 81.3275 129.5 540C129.5 998.672 501.328 1370.5 960 1370.5ZM1894.5 540C1894.5 1056.11 1476.11 1474.5 960 1474.5C443.89 1474.5 25.5 1056.11 25.5 540C25.5 23.8899 443.89 -394.5 960 -394.5C1476.11 -394.5 1894.5 23.8899 1894.5 540ZM960 1475.5C1476.66 1475.5 1895.5 1056.66 1895.5 540C1895.5 23.3376 1476.66 -395.5 960 -395.5C443.338 -395.5 24.5 23.3376 24.5 540C24.5 1056.66 443.338 1475.5 960 1475.5ZM1986.5 540C1986.5 1106.92 1526.92 1566.5 960 1566.5C393.08 1566.5 -66.5 1106.92 -66.5 540C-66.5 -26.9203 393.08 -486.5 960 -486.5C1526.92 -486.5 1986.5 -26.9203 1986.5 540Z"
-          stroke="url(#paint0_radial_2242_3612)"
-        />
-        <defs>
-          <radialGradient
-            id="paint0_radial_2242_3612"
-            cx="0"
-            cy="0"
-            r="1"
-            gradientUnits="userSpaceOnUse"
-            gradientTransform="translate(960 540) rotate(89.0083) scale(1011.15)"
-          >
-            <stop stopColor="#1A202C" stopOpacity="0.2" />
-            <stop offset="1" stopColor="#1A202C" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-      </svg>
-      <Box
-        pos="absolute"
-        bgColor="white"
-        borderRadius="2xl"
-        p="40px 60px"
-        shadow="base"
-        top="45%"
-        left="50%"
-        transform="translate(-50%, -50%)"
-      >
-        <LoginForm />
-      </Box>
+    <Container
+      maxW="lg"
+      py={{ base: '12', md: '24' }}
+      px={{ base: '0', sm: '8' }}
+    >
+      <Stack spacing="8">
+        <Stack spacing="6" alignItems="center">
+          <Logo square boxSize={14} />
+          <Stack spacing={{ base: '2', md: '3' }} textAlign="center">
+            <Heading size={{ base: 'md', md: 'lg' }}>
+              Log in to your account
+            </Heading>
+            <Text color="gray.500">
+              Don&apos;t have an account?{' '}
+              <Link as={NextLink} href="/register" color="blue.600">
+                Sign up
+              </Link>
+            </Text>
+          </Stack>
+        </Stack>
+        <Box py={{ base: '0', sm: '8' }} px={{ base: '4', sm: '10' }}>
+          <form onSubmit={onSubmit} style={{ width: '100%' }}>
+            <Stack spacing="6">
+              <Stack spacing="5">
+                <FormControl>
+                  <FormLabel htmlFor="email">Email</FormLabel>
+                  <Input
+                    id="email"
+                    placeholder="Email address"
+                    w="full"
+                    {...register('email', {
+                      required: 'Email is required',
+                      pattern: {
+                        value: /\S+@\S+\.\S+/,
+                        message: 'Email is not valid'
+                      }
+                    })}
+                  />
+                  {errors.email && (
+                    <FormErrorMessage>{errors.email.message}</FormErrorMessage>
+                  )}
+                </FormControl>
+                <PasswordField
+                  isInvalid={!!errors.password}
+                  error={errors.password}
+                  id="password"
+                  w="min(100%, 425px)"
+                  type="password"
+                  {...register('password', {
+                    required: 'Password is required',
+                    minLength: {
+                      value: 8,
+                      message: 'Password must be at least 8 characters'
+                    },
+                    maxLength: {
+                      value: 20,
+                      message: 'Password must be at most 20 characters'
+                    }
+                  })}
+                />
+              </Stack>
+              <HStack justify="space-between">
+                <Checkbox defaultChecked>Remember me</Checkbox>
+                <Button variant="link" size="sm" colorScheme="blue">
+                  Forgot password?
+                </Button>
+              </HStack>
+              <Stack spacing="6">
+                <Button
+                  variant="solid"
+                  w="full"
+                  colorScheme="blue"
+                  type="submit"
+                  isLoading={loading}
+                >
+                  Sign in
+                </Button>
+                {/* <HStack>
+                <Divider />
+                <Text textStyle="sm" whiteSpace="nowrap" color="gray.400">
+                  or continue with
+                </Text>
+                <Divider />
+              </HStack> */}
+                {/* <OAuthButtonGroup /> */}
+              </Stack>
+            </Stack>
+          </form>
+        </Box>
+      </Stack>
     </Container>
   )
 }

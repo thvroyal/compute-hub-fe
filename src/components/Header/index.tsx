@@ -21,29 +21,27 @@ import {
   Portal,
   useBreakpointValue,
   useColorMode,
-  useDisclosure
+  useDisclosure,
+  VStack
 } from '@chakra-ui/react'
 import Container from 'components/Container'
 import { BurgerIcon, PlusIcon } from 'components/Icons'
 import Logo from 'components/Logo'
-import { useAppSelector } from 'hooks/store'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { MouseEventHandler, useRef } from 'react'
-import { selectCurrentUser } from 'store/slices/authSlice'
 import { AUTH_PAGES } from 'utils/constants'
 import { navigation } from './constant'
+
+const excludeHeader = ['/login', '/register']
 
 const Header = () => {
   const { colorMode } = useColorMode()
   const router = useRouter()
-  const currentUser = useAppSelector(selectCurrentUser)
   const isAuthPage = AUTH_PAGES.includes(router.pathname)
-  const linkAuthPage = isAuthPage
-    ? AUTH_PAGES.find((page) => page !== router.pathname)
-    : null
   const isDesktop = useBreakpointValue({ base: false, md: true })
+  const { data: session, status } = useSession()
 
   const { isOpen, onOpen, onClose } = useDisclosure()
   const burgerBtnRef = useRef<HTMLButtonElement>(null)
@@ -53,7 +51,7 @@ const Header = () => {
   }
 
   const handleClickButtonAuth = () => {
-    router.push(linkAuthPage || '/login')
+    router.push('/login')
   }
 
   const handleLogOut: MouseEventHandler<HTMLButtonElement> = (event) => {
@@ -64,6 +62,11 @@ const Header = () => {
   }
 
   const bgColor = { light: 'white', dark: 'gray.900' }
+  const hasHeader = !excludeHeader.includes(router.pathname)
+
+  if (!hasHeader) {
+    return null
+  }
 
   return (
     <Box bg={bgColor[colorMode]}>
@@ -78,20 +81,28 @@ const Header = () => {
             <>
               <HStack spacing="36px" flex="1" pl="60px">
                 {navigation.map((nav) => (
-                  <Link as={NextLink} href={nav.href} key={nav.href}>
+                  <Button
+                    variant="link"
+                    onClick={() =>
+                      router.pathname !== nav.href && router.push(nav.href)
+                    }
+                    key={nav.href}
+                    size="sm"
+                    isActive={router.pathname === nav.href}
+                  >
                     {nav.label}
-                  </Link>
+                  </Button>
                 ))}
               </HStack>
               <HStack spacing="32px">
-                {linkAuthPage ? (
+                {status === 'unauthenticated' ? (
                   <Button
                     variant="outline"
                     colorScheme="blue"
                     size="sm"
                     onClick={handleClickButtonAuth}
                   >
-                    {linkAuthPage === '/login' ? 'Login' : 'Sign up'}
+                    Login
                   </Button>
                 ) : (
                   <Button
@@ -103,24 +114,16 @@ const Header = () => {
                     New
                   </Button>
                 )}
-                {!isAuthPage && (
+                {status === 'authenticated' && !isAuthPage && (
                   <Menu>
                     <MenuButton>
-                      <Avatar
-                        size="sm"
-                        name={currentUser?.name || 'Default Name'}
-                      />
+                      <Avatar size="sm" name={session.user.name || 'Unknown'} />
                     </MenuButton>
                     <Portal>
                       <MenuList>
                         <MenuItem>Profile</MenuItem>
                         <MenuItem>Activities </MenuItem>
                         <MenuDivider />
-                        {/* <MenuItem>
-                      <Flex align="center" justify="space-between" w="full">
-                        Dark mode <DarkModeSwitch />
-                      </Flex>
-                    </MenuItem> */}
                         <MenuItem onClick={handleLogOut}>Logout</MenuItem>
                       </MenuList>
                     </Portal>
@@ -145,12 +148,61 @@ const Header = () => {
               >
                 <DrawerOverlay />
                 <DrawerContent>
-                  <DrawerHeader>Create your account</DrawerHeader>
+                  <DrawerHeader>
+                    <Link as={NextLink} href="/">
+                      <Box cursor="pointer">
+                        <Logo h={8} w="173.4px" />
+                      </Box>
+                    </Link>
+                  </DrawerHeader>
 
-                  <DrawerBody>Hello here</DrawerBody>
+                  <DrawerBody mt={6}>
+                    <VStack align="start" spacing="24px">
+                      {navigation.map((nav) => (
+                        <Link as={NextLink} href={nav.href} key={nav.href}>
+                          <Button
+                            variant="ghost"
+                            isActive={router.pathname === nav.href}
+                          >
+                            {nav.label}
+                          </Button>
+                        </Link>
+                      ))}
+                      {status === 'authenticated' && (
+                        <Button
+                          colorScheme="blue"
+                          variant="ghost"
+                          leftIcon={<PlusIcon />}
+                          onClick={handleCreateNewProject}
+                        >
+                          New project
+                        </Button>
+                      )}
+                      <Divider />
+                      {status === 'unauthenticated' && (
+                        <Button variant="ghost" onClick={handleClickButtonAuth}>
+                          Login
+                        </Button>
+                      )}
+                      {status === 'authenticated' && (
+                        <>
+                          <Button variant="ghost">Profile</Button>
+                          <Button variant="ghost">Activities</Button>
+                        </>
+                      )}
+                    </VStack>
+                  </DrawerBody>
 
-                  <DrawerFooter>
-                    <Button colorScheme="blue">Save</Button>
+                  <DrawerFooter justifyContent="flex-start">
+                    {status === 'authenticated' && (
+                      <Button
+                        variant="ghost"
+                        colorScheme="red"
+                        onClick={handleLogOut}
+                      >
+                        Logout
+                      </Button>
+                    )}
                   </DrawerFooter>
                 </DrawerContent>
               </Drawer>

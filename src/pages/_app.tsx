@@ -1,20 +1,16 @@
 import { ChakraProvider } from '@chakra-ui/react'
+import { SessionProvider } from 'next-auth/react'
 import { AppProps } from 'next/app'
 import Head from 'next/head'
-import { Provider } from 'react-redux'
-import { wrapper } from 'store/store'
 
 import Footer from 'components/Footer'
 import Header from 'components/Header'
-import theme from 'theme'
 import { Router } from 'next/router'
-import { useEffect } from 'react'
 import nProgress from 'nprogress'
+import { useEffect } from 'react'
+import theme from 'theme'
 
-function MyApp({ Component, ...rest }: AppProps) {
-  const { store, props } = wrapper.useWrappedStore(rest)
-  const { pageProps } = props
-
+function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   useEffect(() => {
     Router.events.on('routeChangeStart', () => {
       nProgress.start()
@@ -52,11 +48,11 @@ function MyApp({ Component, ...rest }: AppProps) {
           content="Compute Hub - Volunteer Computing Central"
         />
       </Head>
-      <Provider store={store}>
+      <SessionProvider session={session}>
         <Header />
         <Component {...pageProps} />
         <Footer />
-      </Provider>
+      </SessionProvider>
     </ChakraProvider>
   )
 }

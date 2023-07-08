@@ -1,6 +1,17 @@
 import { Flex, Text } from '@chakra-ui/layout'
+import { useRouter } from 'next/router'
+
+const excludeFooter = ['/login', '/register']
 
 const Footer = () => {
+  const router = useRouter()
+
+  const hasFooter = !excludeFooter.includes(router.pathname)
+
+  if (!hasFooter) {
+    return null
+  }
+
   return (
     <Flex
       w="full"

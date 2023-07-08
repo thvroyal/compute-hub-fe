@@ -44,7 +44,7 @@ const nextAuthOptions: (req: any, res: any) => NextAuthOptions = (
     callbacks: {
       async jwt({ token, user }) {
         // Persist the OAuth access_token to the token right after signin
-        if (user.access) {
+        if (user && user.access) {
           token.accessToken = user.access.token
           token.refreshToken = user.refresh.token
         }
