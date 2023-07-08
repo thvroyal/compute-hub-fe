@@ -32,6 +32,8 @@ const nextAuthOptions: (req: any, res: any) => NextAuthOptions = (
             setCookie({ res }, 'accessToken', data?.tokens.access.token, {
               maxAge: 30 * 60 * 60,
               path: '/',
+              domain: '.computehub.xyz',
+              secure: process.env.NODE_ENV !== 'development',
               httpOnly: true
             })
             return user
