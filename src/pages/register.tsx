@@ -1,28 +1,19 @@
-import {
-  Box,
-  Container,
-  Heading,
-  HStack,
-  Link,
-  Stack,
-  Text
-} from '@chakra-ui/layout'
+import { Box, Container, Heading, Link, Stack, Text } from '@chakra-ui/layout'
 import {
   Button,
-  Checkbox,
   FormControl,
   FormErrorMessage,
   FormLabel,
-  Input
+  Input,
+  useToast
 } from '@chakra-ui/react'
 import { PasswordField } from 'components/Form/PasswordField'
 import Logo from 'components/Logo'
 import NextLink from 'next/link'
+import { useRouter } from 'next/router'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { register as createUser } from '../helpers/apis'
-import { useToast } from '@chakra-ui/react'
-import { useRouter } from 'next/router'
 
 interface FormValues {
   email: string
