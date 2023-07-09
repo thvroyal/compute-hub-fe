@@ -128,9 +128,6 @@ const RunProject = ({
         pause()
         processor = null
       }
-      // // for testing only UI
-      // startStopWatch()
-      // setStatus(Status.RUNNING)
     }
   }
 
@@ -149,7 +146,10 @@ const RunProject = ({
 
   return (
     <>
-      <Script src="/static/volunteer.js" onLoad={handleScriptLoad} />
+      <Script
+        src={`/static/volunteer.js?timestamp=${new Date().getTime()}`}
+        onLoad={handleScriptLoad}
+      />
       <Script src={bundleFile} onLoad={handleScriptLoad} />
       <Container my="60px">
         <Flex flexWrap="wrap" gap="36px" w="full">
