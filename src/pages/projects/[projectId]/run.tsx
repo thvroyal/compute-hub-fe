@@ -9,10 +9,11 @@ import { getProjectById } from 'helpers/apis'
 import { getPresignedUrl } from 'libs/aws'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import Script from 'next/script'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useStopwatch } from 'react-timer-hook'
 import animations from 'theme/animations'
 import { formatStopWatch } from 'utils/formatData'
+import { ReportStatus, calculate } from 'helpers/compute'
 
 declare global {
   interface Window {
@@ -38,8 +39,38 @@ const statusColor = {
 }
 
 const MAX_SCRIPTS = 2
-let processor: any = null
+const processor: any = null
 let connectTimeout: any
+
+const initialStatus: ReportStatus = {
+  cpuTime: 0,
+  dataTransferTime: 0,
+  nbItems: 0,
+  throughput: 0,
+  throughputs: [],
+  throughputStats: {
+    average: 0,
+    'standard-deviation': 0,
+    maximum: 0,
+    minimum: 0
+  },
+  cpuUsage: 0,
+  cpuUsages: [],
+  cpuUsageStats: {
+    average: 0,
+    'standard-deviation': 0,
+    maximum: 0,
+    minimum: 0
+  },
+  dataTransferLoad: 0,
+  dataTransferLoads: [],
+  dataTransferStats: {
+    average: 0,
+    'standard-deviation': 0,
+    maximum: 0,
+    minimum: 0
+  }
+}
 
 const RunProject = ({
   bundleFile,
@@ -57,6 +88,23 @@ const RunProject = ({
     pause,
     reset
   } = useStopwatch()
+  const [reportStatus, setReportStatus] = useState<ReportStatus>(initialStatus)
+  const [submitState, setSubmitState] = useState(false)
+  const socketRef = useRef<WebSocket | null>(null)
+
+  const [startTime, setStartTime] = useState<number | null>(null)
+  const [endTime, setEndTime] = useState<number | null>(null)
+  const [cpuTime, setCpuTime] = useState(0)
+
+  useEffect(() => {
+    if (endTime) {
+      if (startTime) setCpuTime(endTime - startTime)
+      setEndTime(null)
+    }
+  }, [endTime])
+
+  let processor: any = null
+  let connectTimeout: any
 
   const restart = () => {
     if (!restarting) {
@@ -80,6 +128,7 @@ const RunProject = ({
       const url = `ws://${project?.host.replace('\n', '')}:${
         project?.port
       }/volunteer`
+
       processor = window.volunteer['websocket'](url, window.bundle)
       console.log(processor)
 
@@ -116,6 +165,65 @@ const RunProject = ({
         console.log('connection timeout')
       }, 30 * 1000)
     }, Math.floor(Math.random() * 1000))
+  }
+
+  useEffect(() => {
+    const protocol = 'ws://'
+    const host = 'localhost:5000'
+    const url = protocol + host + '/volunteer-monitoring'
+
+    const monitoringSocket = new WebSocket(url)
+    socketRef.current = monitoringSocket
+
+    monitoringSocket.onopen = () => {
+      console.log('Connected to report status at ' + url)
+    }
+    monitoringSocket.onclose = () => {
+      monitoringSocket.close()
+      console.log('Connection closed at ' + url)
+    }
+    monitoringSocket.onerror = () => {
+      monitoringSocket.close()
+      console.log('Connection closed at ' + url)
+    }
+
+    return () => {
+      monitoringSocket.close()
+    }
+  }, [])
+
+  useEffect(() => {
+    setReportStatus((prev) => ({
+      ...prev,
+      nbItems: 0,
+      cpuTime: 0,
+      dataTransferTime: 0
+    }))
+  }, [submitState])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      calculate('ok', setReportStatus, setSubmitState)
+    }, 3002)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      report('token')
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  const report = (info: any) => {
+    setReportStatus((prevStatus) => ({
+      ...prevStatus,
+      nbItems: prevStatus.nbItems + 1,
+      cpuTime: prevStatus.cpuTime + 1000,
+      dataTransferTime: prevStatus.dataTransferTime + 0
+    }))
   }
 
   const handleClick = async () => {
@@ -210,6 +318,17 @@ const RunProject = ({
               label="Url"
               value="http://localhost:3000/projects/6479766078ef1e038b8a0097"
             />
+            <Flex justify="space-between" w="full">
+              <DataWithLabel
+                label="Throughput"
+                value={reportStatus.throughput}
+              />
+              <DataWithLabel label="CPU Usage" value={reportStatus.cpuUsage} />
+              <DataWithLabel
+                label="Data TransferLoad"
+                value={reportStatus.dataTransferLoad}
+              />
+            </Flex>
           </VStack>
           {project?.host && (
             <Button
