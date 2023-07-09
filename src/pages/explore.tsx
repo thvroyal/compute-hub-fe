@@ -3,10 +3,12 @@ import Container from 'components/Container'
 import ProjectCard from 'components/ProjectCard'
 import { Author, Joined, UnprocessedUnit } from 'components/ProjectCard/States'
 import { getProjects } from 'helpers/apis'
-import { GetStaticProps, InferGetStaticPropsType } from 'next'
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { Project } from 'types/Project'
 
-const Explore = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
+const Explore = (
+  props: InferGetServerSidePropsType<typeof getServerSideProps>
+) => {
   const { projects = [] } = props
   return (
     <Container marginBottom="60px">
@@ -49,7 +51,7 @@ const Explore = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
 
 export default Explore
 
-export const getStaticProps: GetStaticProps<{
+export const getServerSideProps: GetServerSideProps<{
   projects?: Project[]
 }> = async () => {
   const { data } = await getProjects()
