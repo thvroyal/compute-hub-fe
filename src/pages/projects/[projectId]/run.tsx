@@ -76,8 +76,8 @@ const RunProject = ({
     setTimeout(() => {
       console.log('connecting over WebSocket')
       // for run pando locally
-      // const url = `ws://192.168.0.199:${project?.port}/volunteer`
-      const url = `wss://${project?.host.replace('\n', '')}:${
+      // const url = `ws://localhost:${project?.port}/volunteer`
+      const url = `ws://${project?.host.replace('\n', '')}:${
         project?.port
       }/volunteer`
       processor = window.volunteer['websocket'](url, window.bundle)
