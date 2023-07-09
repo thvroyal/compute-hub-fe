@@ -6,6 +6,7 @@ import {
   Td,
   Tr
 } from '@chakra-ui/react'
+import moment from 'moment'
 
 export interface LogsProps {
   data: {
@@ -39,7 +40,7 @@ function Logs({ data, tableContainerProps }: LogsProps) {
                 _hover={{ background: 'blue.50' }}
                 background={bgColorMapping[msg.type || 'info']}
               >
-                <Td>{msg.timestamp}</Td>
+                <Td>{moment(msg.timestamp).format('hh:mm:ss.SSS')}</Td>
                 <Td w="full">{msg.message}</Td>
               </Tr>
             ))}

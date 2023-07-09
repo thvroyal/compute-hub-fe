@@ -5,6 +5,7 @@ import DataWithLabel from 'components/DataWithLabel'
 import { DotIcon, LoadingIcon } from 'components/Icons'
 import { Author } from 'components/ProjectCard/States'
 import Logs, { LogsProps } from 'components/Table/Logs'
+import { getProjectById } from 'helpers/apis'
 import { getPresignedUrl } from 'libs/aws'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import Script from 'next/script'
@@ -37,17 +38,25 @@ const statusColor = {
 }
 
 const MAX_SCRIPTS = 2
+let processor: any = null
+let connectTimeout: any
 
 const RunProject = ({
-  bundleFile
+  bundleFile,
+  project
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const [restarting, setRestarting] = useState<boolean>(false)
   const [status, setStatus] = useState<Status>(Status.LOADING)
   const [numOfScriptLoaded, setNumOfScriptLoaded] = useState<number>(0)
-  const { seconds, minutes, hours, start: startStopWatch } = useStopwatch()
-
-  let processor: any = null
-  let connectTimeout: any
+  const [logs, setLogs] = useState<LogsProps['data']>([] as LogsProps['data'])
+  const {
+    seconds,
+    minutes,
+    hours,
+    start: startStopWatch,
+    pause,
+    reset
+  } = useStopwatch()
 
   const restart = () => {
     if (!restarting) {
@@ -56,6 +65,7 @@ const RunProject = ({
       if (processor) {
         processor.close()
         setStatus(Status.DISCONNECTED)
+        pause()
       }
       processor = null
     }
@@ -65,14 +75,20 @@ const RunProject = ({
     processor = null
     setTimeout(() => {
       console.log('connecting over WebSocket')
-      const url = 'ws://172.31.24.39:8002/volunteer'
+      // for run pando locally
+      const url = `ws://192.168.0.199:${project?.port}/volunteer`
+      // const url = `ws://${project?.host.replace('\n', '')}:${
+      //   project?.port
+      // }/volunteer`
       processor = window.volunteer['websocket'](url, window.bundle)
+      console.log(processor)
 
       processor.on('status', (summary: any) => {
         console.log(summary)
       })
 
       processor.on('close', () => {
+        pause()
         setStatus(Status.DISCONNECTED)
         console.log('closed')
       })
@@ -85,16 +101,14 @@ const RunProject = ({
 
       processor.on('ready', () => {
         setStatus(Status.RUNNING)
+        reset()
         startStopWatch()
         clearTimeout(connectTimeout)
       })
 
-      processor.on('input', (value: any) => {
-        console.log('input', new TextDecoder().decode(value))
-      })
-
-      processor.on('output', (value: any) => {
-        console.log('output', value)
+      processor.on('log', (value: any) => {
+        console.log(value)
+        setLogs((current) => [value, ...current])
       })
 
       console.log('setting restart timeout')
@@ -106,8 +120,14 @@ const RunProject = ({
 
   const handleClick = async () => {
     if (numOfScriptLoaded === MAX_SCRIPTS) {
-      start()
-
+      if (status !== Status.RUNNING) {
+        start()
+      } else if (processor) {
+        processor.terminate()
+        setStatus(Status.DISCONNECTED)
+        pause()
+        processor = null
+      }
       // // for testing only UI
       // startStopWatch()
       // setStatus(Status.RUNNING)
@@ -126,33 +146,6 @@ const RunProject = ({
 
   const starting = status === Status.RUNNING
   const timer = formatStopWatch({ seconds, minutes, hours })
-  const logs: LogsProps['data'] = [
-    {
-      timestamp: '17:52:48.440',
-      message: 'Running build in Washington, D.C., USA (East) – iad1'
-    },
-    {
-      timestamp: '17:52:48.440',
-      message:
-        'Cloning github.com/thvroyal/compute-hub-fe (Branch: main, Commit: 942f608)'
-    },
-    {
-      timestamp: '17:52:48.440',
-      message:
-        'Cloning github.com/thvroyal/compute-hub-fe (Branch: main, Commit: 942f608)'
-    },
-    {
-      timestamp: '17:52:48.440',
-      message:
-        'Cloning github.com/thvroyal/compute-hub-fe (Branch: main, Commit: 942f608)'
-    },
-    {
-      timestamp: '17:52:48.440',
-      type: 'error',
-      message:
-        'Cloning github.com/thvroyal/compute-hub-fe (Branch: main, Commit: 942f608)'
-    }
-  ]
 
   return (
     <>
@@ -218,15 +211,17 @@ const RunProject = ({
               value="http://localhost:3000/projects/6479766078ef1e038b8a0097"
             />
           </VStack>
-          <Button
-            onClick={handleClick}
-            w="full"
-            flex="1"
-            minW="150px"
-            colorScheme={starting ? 'red' : 'blue'}
-          >
-            {starting ? 'Terminate' : 'Start'}
-          </Button>
+          {project?.host && (
+            <Button
+              onClick={handleClick}
+              w="full"
+              flex="1"
+              minW="150px"
+              colorScheme={starting ? 'red' : 'blue'}
+            >
+              {starting ? 'Terminate' : 'Start'}
+            </Button>
+          )}
         </Flex>
         <VStack spacing="24px" w="full" mt="60px" align="start">
           <Heading size="md">Computing Logs</Heading>
@@ -241,13 +236,21 @@ export default RunProject
 
 export const getServerSideProps: GetServerSideProps<{
   bundleFile: string | undefined
+  project: {
+    name: string
+    port: string
+    host: string
+  } | null
 }> = async (context) => {
-  const { projectId } = context.params || {}
-  console.log(projectId)
-  const bundleFile = await getPresignedUrl('123_456/source.js')
+  const { projectId = '' } = context.params || {}
+  const { data } = await getProjectById(projectId.toString())
+  const bundleFile = data
+    ? await getPresignedUrl(`${data.bucketId}/source.js`)
+    : ''
   return {
     props: {
-      bundleFile
+      bundleFile,
+      project: data
     }
   }
 }

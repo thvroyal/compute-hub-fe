@@ -49,6 +49,7 @@
     "jose": "^4.14.4",
     "jsonwebtoken": "^9.0.0",
     "lodash.get": "^4.4.2",
+    "moment": "^2.29.4",
     "next": "13.4.3",
     "next-auth": "^4.22.1",
     "next-pwa": "^5.2.21",
