@@ -13,7 +13,21 @@ import {
   AreaChart,
   Area
 } from 'recharts'
-import { renderActiveShape } from '../../../helpers/compute'
+import {
+  ThroughputData,
+  getThroughput,
+  renderActiveShape
+} from '../../../helpers/compute'
+import mock from '../../../helpers/mock.json'
+
+const data = mock.contributions
+
+const resultData: ThroughputData[] = []
+
+// Push the throughput values to the result array using the getThroughput function
+data.map((contribution) => {
+  resultData.push(getThroughput(contribution))
+})
 
 const DynamicBarChart = dynamic(
   () => import('recharts').then((module) => module.BarChart),
@@ -29,159 +43,6 @@ const DynamicPieChart = dynamic(
   }
 )
 
-const data = [
-  {
-    id: 'user1',
-    cpuTime: 3031,
-    dataTransferTime: 0,
-    nbItems: 3,
-    units: 'Numbers',
-    deviceName: 'LG G6 H870 2017',
-    throughput: 0.999333777481679,
-    throughputStats: {
-      average: '0.87',
-      'standard-deviation': '0.16',
-      maximum: '1.00',
-      minimum: '0.67'
-    },
-    cpuUsage: 100.96602265156562,
-    cpuUsageStats: {
-      average: '89.00',
-      'standard-deviation': '14.07',
-      maximum: '101.00',
-      minimum: '67.08'
-    },
-    dataTransferLoad: 0,
-    dataTransferStats: {
-      average: '0.00',
-      'standard-deviation': '0.00',
-      maximum: '0.00',
-      minimum: '0.00'
-    }
-  },
-  {
-    id: 'user2',
-    cpuTime: 1990,
-    dataTransferTime: 0,
-    nbItems: 1,
-    units: 'Numbers',
-    deviceName: 'LG G6 H870 2017',
-    throughput: 0.33344448149383127,
-    throughputStats: {
-      average: '0.58',
-      'standard-deviation': '0.11',
-      maximum: '0.67',
-      minimum: '0.33'
-    },
-    cpuUsage: 66.35545181727242,
-    cpuUsageStats: {
-      average: '98.94',
-      'standard-deviation': '27.49',
-      maximum: '132.88',
-      minimum: '62.49'
-    },
-    dataTransferLoad: 0,
-    dataTransferStats: {
-      average: '0.00',
-      'standard-deviation': '0.00',
-      maximum: '0.00',
-      minimum: '0.00'
-    }
-  },
-  {
-    id: 'user3',
-    cpuTime: 3031,
-    dataTransferTime: 0,
-    nbItems: 3,
-    units: 'Numbers',
-    deviceName: 'LG G6 H870 2017',
-    throughput: 0.3,
-    throughputStats: {
-      average: '0.87',
-      'standard-deviation': '0.16',
-      maximum: '1.00',
-      minimum: '0.67'
-    },
-    cpuUsage: 100.96602265156562,
-    cpuUsageStats: {
-      average: '89.00',
-      'standard-deviation': '14.07',
-      maximum: '101.00',
-      minimum: '67.08'
-    },
-    dataTransferLoad: 0,
-    dataTransferStats: {
-      average: '0.00',
-      'standard-deviation': '0.00',
-      maximum: '0.00',
-      minimum: '0.00'
-    }
-  },
-  {
-    id: 'user4',
-    cpuTime: 3031,
-    dataTransferTime: 0,
-    nbItems: 3,
-    units: 'Numbers',
-    deviceName: 'LG G6 H870 2017',
-    throughput: 0.5,
-    throughputStats: {
-      average: '0.87',
-      'standard-deviation': '0.16',
-      maximum: '1.00',
-      minimum: '0.67'
-    },
-    cpuUsage: 100.96602265156562,
-    cpuUsageStats: {
-      average: '89.00',
-      'standard-deviation': '14.07',
-      maximum: '101.00',
-      minimum: '67.08'
-    },
-    dataTransferLoad: 0,
-    dataTransferStats: {
-      average: '0.00',
-      'standard-deviation': '0.00',
-      maximum: '0.00',
-      minimum: '0.00'
-    }
-  },
-  {
-    id: 'user5',
-    cpuTime: 3031,
-    dataTransferTime: 0,
-    nbItems: 3,
-    units: 'Numbers',
-    deviceName: 'LG G6 H870 2017',
-    throughput: 0.7,
-    throughputStats: {
-      average: '0.87',
-      'standard-deviation': '0.16',
-      maximum: '1.00',
-      minimum: '0.67'
-    },
-    cpuUsage: 100.96602265156562,
-    cpuUsageStats: {
-      average: '89.00',
-      'standard-deviation': '14.07',
-      maximum: '101.00',
-      minimum: '67.08'
-    },
-    dataTransferLoad: 0,
-    dataTransferStats: {
-      average: '0.00',
-      'standard-deviation': '0.00',
-      maximum: '0.00',
-      minimum: '0.00'
-    }
-  }
-]
-
-interface DataPoint {
-  time: number
-  [key: string]: number
-}
-
 const ProjectAnalytics = () => {
   const [isClient, setIsClient] = useState(false)
 
@@ -193,35 +54,6 @@ const ProjectAnalytics = () => {
 
   const onPieEnter = (_: any, index: number) => {
     setActiveIndex(index)
-  }
-
-  const [data2, setData] = useState<DataPoint[]>([
-    {
-      time: new Date().getTime(),
-      'Category A': 0,
-      'Category B': 0,
-      'Category C': 0
-    }
-  ])
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const newDataPoint = generateRandomDataPoint() // Generate a random data point
-      setData((prevData) => [...prevData, newDataPoint])
-    }, 1000) // Add a new data point every second
-
-    return () => {
-      clearInterval(interval)
-    }
-  }, [])
-
-  const generateRandomDataPoint = (): DataPoint => {
-    const categories = ['Category A', 'Category B', 'Category C']
-    const newDataPoint: DataPoint = { time: new Date().getTime() }
-    categories.forEach((category) => {
-      newDataPoint[category] = Math.floor(Math.random() * 100) // Generate a random value for each category
-    })
-    return newDataPoint
   }
 
   const areaColors: string[] = ['#8884d8', '#82ca9d', '#ffc658']
@@ -245,8 +77,6 @@ const ProjectAnalytics = () => {
         <Flex
           w="min(100%, 45%)"
           flexDir="column"
-          // gap="32px"
-          // p="12px"
           border="1px solid"
           borderRadius="16px"
           borderColor="gray.200"
@@ -257,7 +87,7 @@ const ProjectAnalytics = () => {
             <DynamicBarChart
               width={500}
               height={400}
-              data={data}
+              data={data[data.length - 1].contribution}
               margin={{
                 top: 30,
                 right: 30,
@@ -290,7 +120,6 @@ const ProjectAnalytics = () => {
         <Flex
           w="min(100%, 45%)"
           flexDir="column"
-          // gap="32px"
           border="1px solid"
           borderRadius="16px"
           borderColor="gray.200"
@@ -303,7 +132,7 @@ const ProjectAnalytics = () => {
                 // name="Throughput"
                 activeIndex={activeIndex}
                 activeShape={renderActiveShape}
-                data={data}
+                data={data[data.length - 1].contribution}
                 cx="50%"
                 cy="50%"
                 innerRadius={60}
@@ -331,8 +160,6 @@ const ProjectAnalytics = () => {
         <Flex
           w="min(100%, 100%)"
           flexDir="column"
-          // gap="32px"
-          // p="12px"
           border="1px solid"
           borderRadius="16px"
           borderColor="gray.200"
@@ -344,7 +171,7 @@ const ProjectAnalytics = () => {
             <AreaChart
               width={1000}
               height={400}
-              data={data2}
+              data={resultData}
               margin={{
                 top: 40,
                 right: 30,
@@ -356,8 +183,8 @@ const ProjectAnalytics = () => {
               <XAxis
                 dataKey="time"
                 type="number"
-                domain={['auto', 'auto']} // Adjust the domain dynamically based on the data
-                tickFormatter={(time) => new Date(time).toLocaleTimeString()} // Format the x-axis tick labels
+                domain={['auto', 'auto']}
+                tickFormatter={(time) => new Date(time).toLocaleTimeString()}
               />
               <YAxis />
               <Tooltip />
@@ -370,15 +197,15 @@ const ProjectAnalytics = () => {
                   }
                 ]}
               />
-              {Object.keys(data2[0] || {})
+              {Object.keys(resultData[0] || {})
                 .filter((key) => key !== 'time') // Exclude the 'time' key from rendering as an area
-                .map((category, index) => (
+                .map((user, index) => (
                   <Area
                     name="Historical Throughput"
                     isAnimationActive={false}
-                    key={category}
+                    key={user}
                     type="monotone"
-                    dataKey={category}
+                    dataKey={user}
                     stackId="1"
                     fill={areaColors[index % areaColors.length]}
                   />

@@ -39,8 +39,6 @@ const statusColor = {
 }
 
 const MAX_SCRIPTS = 2
-const processor: any = null
-let connectTimeout: any
 
 const initialStatus: ReportStatus = {
   cpuTime: 0,
@@ -91,17 +89,6 @@ const RunProject = ({
   const [reportStatus, setReportStatus] = useState<ReportStatus>(initialStatus)
   const [submitState, setSubmitState] = useState(false)
   const socketRef = useRef<WebSocket | null>(null)
-
-  const [startTime, setStartTime] = useState<number | null>(null)
-  const [endTime, setEndTime] = useState<number | null>(null)
-  const [cpuTime, setCpuTime] = useState(0)
-
-  useEffect(() => {
-    if (endTime) {
-      if (startTime) setCpuTime(endTime - startTime)
-      setEndTime(null)
-    }
-  }, [endTime])
 
   let processor: any = null
   let connectTimeout: any
@@ -203,7 +190,7 @@ const RunProject = ({
 
   useEffect(() => {
     const interval = setInterval(() => {
-      calculate('ok', setReportStatus, setSubmitState)
+      calculate(reportStatus, setReportStatus, setSubmitState)
     }, 3002)
 
     return () => clearInterval(interval)
@@ -211,13 +198,13 @@ const RunProject = ({
 
   useEffect(() => {
     const interval = setInterval(() => {
-      report('token')
+      report()
     }, 1000)
 
     return () => clearInterval(interval)
   }, [])
 
-  const report = (info: any) => {
+  const report = () => {
     setReportStatus((prevStatus) => ({
       ...prevStatus,
       nbItems: prevStatus.nbItems + 1,

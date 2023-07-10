@@ -74,8 +74,14 @@ export const minimum = (a: number[]): number => {
   return min
 }
 
+interface ReportInfo {
+  cpuTime: number
+  dataTransferTime: number
+  nbItems: number
+}
+
 export const calculate = (
-  info: any,
+  info: ReportInfo,
   setReportStatus: Dispatch<SetStateAction<ReportStatus>>,
   setSubmitState: Dispatch<SetStateAction<boolean>>
 ) => {
@@ -131,7 +137,6 @@ export const calculate = (
 
 export const renderActiveShape = (props: any) => {
   const RADIAN = Math.PI / 180
-  console.log(props)
   const {
     cx,
     cy,
@@ -201,4 +206,25 @@ export const renderActiveShape = (props: any) => {
       </text>
     </g>
   )
+}
+
+export interface ThroughputData {
+  time: number
+  [key: string]: number
+}
+
+export const getThroughput = (data: any) => {
+  const throughputData: ThroughputData = { time: 0 }
+
+  data.contribution.forEach((contribution: any) => {
+    const { id, throughput } = contribution
+    throughputData[id] = throughput
+  })
+
+  const throughputObject = {
+    ...throughputData,
+    time: Date.parse(data.timestamp)
+  }
+
+  return throughputObject
 }
