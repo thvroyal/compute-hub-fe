@@ -2,8 +2,6 @@ import { Dispatch, SetStateAction } from 'react'
 import { Sector } from 'recharts'
 
 export interface ReportStatus {
-  //   id: string
-  //   units: string
   cpuTime: number
   dataTransferTime: number
   nbItems: number
@@ -74,10 +72,15 @@ export const minimum = (a: number[]): number => {
   return min
 }
 
+interface ReportInfo {
+  cpuTime: number
+  dataTransferTime: number
+  nbItems: number
+}
+
 export const calculate = (
-  info: any,
-  setReportStatus: Dispatch<SetStateAction<ReportStatus>>,
-  setSubmitState: Dispatch<SetStateAction<boolean>>
+  info: ReportInfo,
+  setReportStatus: Dispatch<SetStateAction<ReportStatus>>
 ) => {
   const reportInfo = {
     cpuTime: info.cpuTime || 1000,
@@ -125,13 +128,10 @@ export const calculate = (
       (prevStatus.dataTransferTime / duration) * 100
     ]
   }))
-
-  setSubmitState((prev) => !prev)
 }
 
 export const renderActiveShape = (props: any) => {
   const RADIAN = Math.PI / 180
-  console.log(props)
   const {
     cx,
     cy,
@@ -201,4 +201,25 @@ export const renderActiveShape = (props: any) => {
       </text>
     </g>
   )
+}
+
+export interface ThroughputData {
+  time: number
+  [key: string]: number
+}
+
+export const getThroughput = (data: any) => {
+  const throughputData: ThroughputData = { time: 0 }
+
+  data.contribution.forEach((contribution: any) => {
+    const { id, throughput } = contribution
+    throughputData[id] = throughput
+  })
+
+  const throughputObject = {
+    ...throughputData,
+    time: Date.parse(data.timestamp)
+  }
+
+  return throughputObject
 }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button, Flex, Heading, Text, VStack } from '@chakra-ui/react'
 import Container from 'components/Container'
 import DataWithLabel from 'components/DataWithLabel'
@@ -39,8 +38,6 @@ const statusColor = {
 }
 
 const MAX_SCRIPTS = 2
-const processor: any = null
-let connectTimeout: any
 
 const initialStatus: ReportStatus = {
   cpuTime: 0,
@@ -92,17 +89,6 @@ const RunProject = ({
   const [submitState, setSubmitState] = useState(false)
   const socketRef = useRef<WebSocket | null>(null)
 
-  const [startTime, setStartTime] = useState<number | null>(null)
-  const [endTime, setEndTime] = useState<number | null>(null)
-  const [cpuTime, setCpuTime] = useState(0)
-
-  useEffect(() => {
-    if (endTime) {
-      if (startTime) setCpuTime(endTime - startTime)
-      setEndTime(null)
-    }
-  }, [endTime])
-
   let processor: any = null
   let connectTimeout: any
 
@@ -124,10 +110,10 @@ const RunProject = ({
     setTimeout(() => {
       console.log('connecting over WebSocket')
       // for run pando locally
-      // const url = `ws://localhost:${project?.port}/volunteer`
-      const url = `ws://${project?.host.replace('\n', '')}:${
-        project?.port
-      }/volunteer`
+      const url = `ws://localhost:${project?.port}/volunteer`
+      // const url = `ws://${project?.host.replace('\n', '')}:${
+      //   project?.port
+      // }/volunteer`
 
       processor = window.volunteer['websocket'](url, window.bundle)
       console.log(processor)
@@ -156,8 +142,12 @@ const RunProject = ({
       })
 
       processor.on('log', (value: any) => {
-        console.log(value)
+        // console.log(value)
         setLogs((current) => [value, ...current])
+      })
+
+      processor.on('deltaTime', (value: number) => {
+        report(value)
       })
 
       console.log('setting restart timeout')
@@ -165,12 +155,9 @@ const RunProject = ({
         console.log('connection timeout')
       }, 30 * 1000)
     }, Math.floor(Math.random() * 1000))
-  }
 
-  useEffect(() => {
-    const protocol = 'ws://'
-    const host = 'localhost:5000'
-    const url = protocol + host + '/volunteer-monitoring'
+    const url = `ws://localhost:${project?.port}/volunteer-monitoring`
+    console.log(url)
 
     const monitoringSocket = new WebSocket(url)
     socketRef.current = monitoringSocket
@@ -190,7 +177,20 @@ const RunProject = ({
     return () => {
       monitoringSocket.close()
     }
-  }, [])
+  }
+
+  const submit = (info: ReportStatus) => {
+    const { dataTransferLoads, throughputs, cpuUsages, ...sendData } = info
+    const sendData2 = {
+      //Mock
+      id: Math.floor(Math.random() * 200),
+      ...sendData
+    }
+
+    if (socketRef.current) {
+      socketRef.current.send(JSON.stringify(sendData2))
+    }
+  }
 
   useEffect(() => {
     setReportStatus((prev) => ({
@@ -203,25 +203,24 @@ const RunProject = ({
 
   useEffect(() => {
     const interval = setInterval(() => {
-      calculate('ok', setReportStatus, setSubmitState)
+      setReportStatus((prevStatus) => {
+        const updatedStatus = { ...prevStatus }
+        calculate(updatedStatus, setReportStatus)
+        submit(updatedStatus)
+        // console.log('Report', updatedStatus)
+        return updatedStatus
+      })
+      setSubmitState((prevState) => !prevState)
     }, 3002)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [submitState])
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      report('token')
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  const report = (info: any) => {
+  const report = (deltaTime: number) => {
     setReportStatus((prevStatus) => ({
       ...prevStatus,
       nbItems: prevStatus.nbItems + 1,
-      cpuTime: prevStatus.cpuTime + 1000,
+      cpuTime: prevStatus.cpuTime + deltaTime,
       dataTransferTime: prevStatus.dataTransferTime + 0
     }))
   }

@@ -8319,52 +8319,37 @@ module.exports={doubles:{step:4,points:[["e60fce93b59e9ec53011aabc21c23e97b2a313
 
 },{"bn.js":20,"minimalistic-assert":200,"minimalistic-crypto-utils":201}],121:[function(require,module,exports){
 module.exports={
-  "_args": [
-    [
-      "elliptic@6.4.0",
-      "/Users/thvroyal/pando-computing"
-    ]
+  "name": "elliptic",
+  "version": "6.4.0",
+  "description": "EC cryptography",
+  "main": "lib/elliptic.js",
+  "files": [
+    "lib"
   ],
-  "_from": "elliptic@6.4.0",
-  "_id": "elliptic@6.4.0",
-  "_inBundle": false,
-  "_integrity": "sha1-ysmvh2LIWDYYcAPI3+GT5eLq5d8=",
-  "_location": "/elliptic",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "version",
-    "registry": true,
-    "raw": "elliptic@6.4.0",
-    "name": "elliptic",
-    "escapedName": "elliptic",
-    "rawSpec": "6.4.0",
-    "saveSpec": null,
-    "fetchSpec": "6.4.0"
+  "scripts": {
+    "jscs": "jscs benchmarks/*.js lib/*.js lib/**/*.js lib/**/**/*.js test/index.js",
+    "jshint": "jscs benchmarks/*.js lib/*.js lib/**/*.js lib/**/**/*.js test/index.js",
+    "lint": "npm run jscs && npm run jshint",
+    "unit": "istanbul test _mocha --reporter=spec test/index.js",
+    "test": "npm run lint && npm run unit",
+    "version": "grunt dist && git add dist/"
   },
-  "_requiredBy": [
-    "/browserify-sign",
-    "/create-ecdh"
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:indutny/elliptic"
+  },
+  "keywords": [
+    "EC",
+    "Elliptic",
+    "curve",
+    "Cryptography"
   ],
-  "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.4.0.tgz",
-  "_spec": "6.4.0",
-  "_where": "/Users/thvroyal/pando-computing",
-  "author": {
-    "name": "Fedor Indutny",
-    "email": "fedor@indutny.com"
-  },
+  "author": "Fedor Indutny <fedor@indutny.com>",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/indutny/elliptic/issues"
   },
-  "dependencies": {
-    "bn.js": "^4.4.0",
-    "brorand": "^1.0.1",
-    "hash.js": "^1.0.0",
-    "hmac-drbg": "^1.0.0",
-    "inherits": "^2.0.1",
-    "minimalistic-assert": "^1.0.0",
-    "minimalistic-crypto-utils": "^1.0.0"
-  },
-  "description": "EC cryptography",
+  "homepage": "https://github.com/indutny/elliptic",
   "devDependencies": {
     "brfs": "^1.4.3",
     "coveralls": "^2.11.3",
@@ -8381,34 +8366,20 @@ module.exports={
     "jshint": "^2.6.0",
     "mocha": "^2.1.0"
   },
-  "files": [
-    "lib"
-  ],
-  "homepage": "https://github.com/indutny/elliptic",
-  "keywords": [
-    "EC",
-    "Elliptic",
-    "curve",
-    "Cryptography"
-  ],
-  "license": "MIT",
-  "main": "lib/elliptic.js",
-  "name": "elliptic",
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/indutny/elliptic.git"
-  },
-  "scripts": {
-    "jscs": "jscs benchmarks/*.js lib/*.js lib/**/*.js lib/**/**/*.js test/index.js",
-    "jshint": "jscs benchmarks/*.js lib/*.js lib/**/*.js lib/**/**/*.js test/index.js",
-    "lint": "npm run jscs && npm run jshint",
-    "test": "npm run lint && npm run unit",
-    "unit": "istanbul test _mocha --reporter=spec test/index.js",
-    "version": "grunt dist && git add dist/"
-  },
-  "version": "6.4.0"
-}
+  "dependencies": {
+    "bn.js": "^4.4.0",
+    "brorand": "^1.0.1",
+    "hash.js": "^1.0.0",
+    "hmac-drbg": "^1.0.0",
+    "inherits": "^2.0.1",
+    "minimalistic-assert": "^1.0.0",
+    "minimalistic-crypto-utils": "^1.0.0"
+  }
 
+,"_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.4.0.tgz"
+,"_integrity": "sha1-ysmvh2LIWDYYcAPI3+GT5eLq5d8="
+,"_from": "elliptic@6.4.0"
+}
 },{}],122:[function(require,module,exports){
 "use strict";module.exports=encodeUrl;var ENCODE_CHARS_REGEXP=/(?:[^\x21\x25\x26-\x3B\x3D\x3F-\x5B\x5D\x5F\x61-\x7A\x7E]|%(?:[^0-9A-Fa-f]|[0-9A-Fa-f][^0-9A-Fa-f]|$))+/g,UNMATCHED_SURROGATE_PAIR_REGEXP=/(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF]([^\uDC00-\uDFFF]|$)/g,UNMATCHED_SURROGATE_PAIR_REPLACE="$1�$2";function encodeUrl(E){return String(E).replace(UNMATCHED_SURROGATE_PAIR_REGEXP,UNMATCHED_SURROGATE_PAIR_REPLACE).replace(ENCODE_CHARS_REGEXP,encodeURI)}
 
@@ -10443,7 +10414,7 @@ module.exports=extend;var hasOwnProperty=Object.prototype.hasOwnProperty;functio
 
 },{}],349:[function(require,module,exports){
 (function (Buffer){
-var BootstrapClient=require("webrtc-bootstrap"),Node=require("webrtc-tree-overlay"),createProcessor=require("../src/processor.js"),Socket=require("simple-websocket"),log=require("debug")("pando:browser"),zlib=require("zlib"),EE=require("event-emitter");function getLog(e,o="info"){return{timestamp:(new Date).getTime(),type:o,message:e}}module.exports.webrtc=function(e,o,r){r||console.log("Missing configuration");var t=new BootstrapClient(e,{secure:r.secure}),n={requestTimeoutInMs:r.requestTimeoutInMs,peerOpts:{config:{iceServers:r.iceServers}},maxDegree:r.degree};console.log("Node() opts:"),console.log(JSON.stringify(n));var i=new Node(t,n).join();console.log("creating processor");var s=createProcessor(i,{bundle:o["/pando/1.0.0"],globalMonitoring:r.globalMonitoring,reportingInterval:r.reportingInterval,startProcessing:!0,batchSize:r.batchSize}),c=!1;function g(){c||(c=!0,t.close(),i.close())}return s.on("close",g),s.on("error",g),s},module.exports.websocket=function(e,o){var r=new Socket(e),t=EE({});return t.close=function(){t.emit("log",getLog("Processor will be closed!")),t.emit("close"),log("closing")},t.terminate=function(){t.close(),r.destroy(["Connection be terminated"])},r.on("connect",function(){t.emit("ready"),t.emit("log",getLog("Starting processing project")),log("starting processing")}).on("data",function(e){t.emit("log",getLog(`Processing new input: ${e}`)),log("processing input: "+e),setTimeout(function(){o["/pando/1.0.0"](e,function(e,o){if(e)return t.emit("log",getLog(e.message,"error")),r.destroy();try{r.send(zlib.gzipSync(Buffer.from(String(o))).toString("base64")),t.emit("log",getLog(`Finish process input. The result: ${o}`))}catch(e){console.log(e)}})},0)}).on("close",function(){t.emit("log",getLog("Disconnected!")),t.close()}).on("error",function(e){log("error: "+e),t.emit("log",getLog(e.message||"Internal error","error")),t.emit("error",e)}),t};
+var BootstrapClient=require("webrtc-bootstrap"),Node=require("webrtc-tree-overlay"),createProcessor=require("../src/processor.js"),Socket=require("simple-websocket"),log=require("debug")("pando:browser"),zlib=require("zlib"),EE=require("event-emitter");function getLog(e,o="info"){return{timestamp:(new Date).getTime(),info:o,message:e}}module.exports.webrtc=function(e,o,r){r||console.log("Missing configuration");var t=new BootstrapClient(e,{secure:r.secure}),n={requestTimeoutInMs:r.requestTimeoutInMs,peerOpts:{config:{iceServers:r.iceServers}},maxDegree:r.degree};console.log("Node() opts:"),console.log(JSON.stringify(n));var i=new Node(t,n).join();console.log("creating processor");var s=createProcessor(i,{bundle:o["/pando/1.0.0"],globalMonitoring:r.globalMonitoring,reportingInterval:r.reportingInterval,startProcessing:!0,batchSize:r.batchSize}),c=!1;function g(){c||(c=!0,t.close(),i.close())}return s.on("close",g),s.on("error",g),s},module.exports.websocket=function(e,o){var r=new Socket(e),t=EE({});return t.close=function(){t.emit("log",getLog("Processor will be closed!")),t.emit("close"),log("closing")},t.terminate=function(){t.close(),r.destroy(["Connection be terminated"])},r.on("connect",function(){t.emit("ready"),t.emit("log",getLog("Starting processing project")),log("starting processing")}).on("data",function(e){t.emit("log",getLog(`Processing new input: ${e}`)),log("processing input: "+e),startTime=(new Date).getTime(),setTimeout(function(){o["/pando/1.0.0"](e,function(e,o){if(e)return t.emit("log",getLog(e,"error")),r.destroy();try{r.send(zlib.gzipSync(Buffer.from(String(o))).toString("base64")),t.emit("deltaTime",(new Date).getTime()-startTime),t.emit("log",getLog(`Finish process input. The result: ${o}`))}catch(e){console.log(e)}})},0)}).on("close",function(){t.emit("log",getLog("Disconnected!")),t.close()}).on("error",function(e){log("error: "+e),t.emit("log",getLog(e,"error")),t.emit("error",e)}),t};
 
 }).call(this,require("buffer").Buffer)
 },{"../src/processor.js":350,"buffer":75,"debug":91,"event-emitter":138,"simple-websocket":318,"webrtc-bootstrap":345,"webrtc-tree-overlay":347,"zlib":71}],350:[function(require,module,exports){
