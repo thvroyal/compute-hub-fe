@@ -39,6 +39,16 @@ const nextAuthOptions: (req: any, res: any) => NextAuthOptions = (
               secure: process.env.NODE_ENV !== 'development',
               httpOnly: true
             })
+            setCookie({ res }, 'refreshToken', data?.tokens.refresh.token, {
+              maxAge: 30 * 60 * 60,
+              path: '/',
+              domain:
+                process.env.NODE_ENV !== 'development'
+                  ? '.computehub.xyz'
+                  : undefined,
+              secure: process.env.NODE_ENV !== 'development',
+              httpOnly: true
+            })
             return user
           } else {
             return null
