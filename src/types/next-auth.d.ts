@@ -1,4 +1,3 @@
-import { DefaultSession } from 'next-auth'
 import 'next-auth/jwt'
 
 declare module 'next-auth' {
@@ -7,10 +6,11 @@ declare module 'next-auth' {
    */
   interface Session {
     user: {
-      name: string
+      id: string
       /** The user's postal address. */
-      address: string
-    } & DefaultSession['user']
+      name: string
+      email: string
+    }
     accessToken?: string
     refreshToken?: string
   }
@@ -35,6 +35,7 @@ declare module 'next-auth/jwt' {
   /** Returned by the `jwt` callback and `getToken`, when using JWT sessions */
   interface JWT {
     /** OpenID ID Token */
+    id: string
     accessToken?: string
     refreshToken?: string
   }

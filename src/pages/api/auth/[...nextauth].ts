@@ -63,6 +63,7 @@ const nextAuthOptions: (req: any, res: any) => NextAuthOptions = (
         if (user && user.access) {
           token.accessToken = user.access.token
           token.refreshToken = user.refresh.token
+          token.id = user.id
         }
         return token
       },
@@ -71,6 +72,10 @@ const nextAuthOptions: (req: any, res: any) => NextAuthOptions = (
         if (token) {
           session.accessToken = token.accessToken
           session.refreshToken = token.refreshToken
+          session.user = {
+            ...session.user,
+            id: token.id
+          }
         }
         return session
       }

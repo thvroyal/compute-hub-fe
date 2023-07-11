@@ -92,7 +92,7 @@ const RunProject = ({
   const socketRef = useRef<WebSocket | null>(null)
   const { data: session } = useSession()
 
-  const userId = session?.user.name
+  const userId = session?.user.id
 
   const url =
     environment === 'production'
