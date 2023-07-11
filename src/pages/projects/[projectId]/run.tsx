@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button, Flex, Heading, Text, VStack } from '@chakra-ui/react'
 import Container from 'components/Container'
 import DataWithLabel from 'components/DataWithLabel'
@@ -9,10 +8,12 @@ import { getProjectById } from 'helpers/apis'
 import { getPresignedUrl } from 'libs/aws'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import Script from 'next/script'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useStopwatch } from 'react-timer-hook'
 import animations from 'theme/animations'
 import { formatStopWatch } from 'utils/formatData'
+import { ReportStatus, calculate } from 'helpers/compute'
+import { useSession } from 'next-auth/react'
 
 declare global {
   interface Window {
@@ -38,12 +39,41 @@ const statusColor = {
 }
 
 const MAX_SCRIPTS = 2
-let processor: any = null
-let connectTimeout: any
+
+const initialStatus: ReportStatus = {
+  cpuTime: 0,
+  dataTransferTime: 0,
+  nbItems: 0,
+  throughput: 0,
+  throughputs: [],
+  throughputStats: {
+    average: 0,
+    'standard-deviation': 0,
+    maximum: 0,
+    minimum: 0
+  },
+  cpuUsage: 0,
+  cpuUsages: [],
+  cpuUsageStats: {
+    average: 0,
+    'standard-deviation': 0,
+    maximum: 0,
+    minimum: 0
+  },
+  dataTransferLoad: 0,
+  dataTransferLoads: [],
+  dataTransferStats: {
+    average: 0,
+    'standard-deviation': 0,
+    maximum: 0,
+    minimum: 0
+  }
+}
 
 const RunProject = ({
   bundleFile,
-  project
+  project,
+  environment
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const [restarting, setRestarting] = useState<boolean>(false)
   const [status, setStatus] = useState<Status>(Status.LOADING)
@@ -57,6 +87,20 @@ const RunProject = ({
     pause,
     reset
   } = useStopwatch()
+  const [reportStatus, setReportStatus] = useState<ReportStatus>(initialStatus)
+  const [submitState, setSubmitState] = useState(false)
+  const socketRef = useRef<WebSocket | null>(null)
+  const { data: session } = useSession()
+
+  const userId = session?.user.name
+
+  const url =
+    environment === 'production'
+      ? `ws://${project?.host.replace('\n', '')}:${project?.port}`
+      : `ws://localhost:${project?.port}`
+
+  let processor: any = null
+  let connectTimeout: any
 
   const restart = () => {
     if (!restarting) {
@@ -75,12 +119,11 @@ const RunProject = ({
     processor = null
     setTimeout(() => {
       console.log('connecting over WebSocket')
-      // for run pando locally
-      // const url = `ws://localhost:${project?.port}/volunteer`
-      const url = `ws://${project?.host.replace('\n', '')}:${
-        project?.port
-      }/volunteer`
-      processor = window.volunteer['websocket'](url, window.bundle)
+
+      processor = window.volunteer['websocket'](
+        `${url}/volunteer`,
+        window.bundle
+      )
       console.log(processor)
 
       processor.on('status', (summary: any) => {
@@ -107,8 +150,11 @@ const RunProject = ({
       })
 
       processor.on('log', (value: any) => {
-        console.log(value)
         setLogs((current) => [value, ...current])
+      })
+
+      processor.on('deltaTime', (value: number) => {
+        report(value)
       })
 
       console.log('setting restart timeout')
@@ -116,6 +162,71 @@ const RunProject = ({
         console.log('connection timeout')
       }, 30 * 1000)
     }, Math.floor(Math.random() * 1000))
+
+    const monitoringSocket = new WebSocket(`${url}/volunteer-monitoring`)
+    socketRef.current = monitoringSocket
+
+    monitoringSocket.onopen = () => {
+      console.log('Connected to report status at ' + url)
+    }
+    monitoringSocket.onclose = () => {
+      monitoringSocket.close()
+      console.log('Connection closed at ' + url)
+    }
+    monitoringSocket.onerror = () => {
+      monitoringSocket.close()
+      console.log('Connection closed at ' + url)
+    }
+
+    return () => {
+      monitoringSocket.close()
+    }
+  }
+
+  const submit = (info: ReportStatus) => {
+    const { dataTransferLoads, throughputs, cpuUsages, ...sendData } = info
+    const sendData2 = {
+      //Mock
+      userId: userId,
+      ...sendData
+    }
+    // console.log(sendData2)
+    if (socketRef.current) {
+      socketRef.current.send(JSON.stringify(sendData2))
+    }
+  }
+
+  useEffect(() => {
+    setReportStatus((prev) => ({
+      ...prev,
+      nbItems: 0,
+      cpuTime: 0,
+      dataTransferTime: 0
+    }))
+  }, [submitState])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setReportStatus((prevStatus) => {
+        const updatedStatus = { ...prevStatus }
+        calculate(updatedStatus, setReportStatus)
+        submit(updatedStatus)
+        return updatedStatus
+      })
+      setSubmitState((prevState) => !prevState)
+    }, 3002)
+
+    return () => clearInterval(interval)
+  }, [submitState])
+
+  const report = (deltaTime: number) => {
+    // console.log(deltaTime)
+    setReportStatus((prevStatus) => ({
+      ...prevStatus,
+      nbItems: prevStatus.nbItems + 1,
+      cpuTime: prevStatus.cpuTime + deltaTime,
+      dataTransferTime: prevStatus.dataTransferTime + 0
+    }))
   }
 
   const handleClick = async () => {
@@ -210,6 +321,17 @@ const RunProject = ({
               label="Url"
               value="http://localhost:3000/projects/6479766078ef1e038b8a0097"
             />
+            <Flex justify="space-between" w="full">
+              <DataWithLabel
+                label="Throughput"
+                value={reportStatus.throughput}
+              />
+              <DataWithLabel label="CPU Usage" value={reportStatus.cpuUsage} />
+              <DataWithLabel
+                label="Data TransferLoad"
+                value={reportStatus.dataTransferLoad}
+              />
+            </Flex>
           </VStack>
           {project?.host && (
             <Button
@@ -236,6 +358,7 @@ export default RunProject
 
 export const getServerSideProps: GetServerSideProps<{
   bundleFile: string | undefined
+  environment: 'production' | 'development'
   project: {
     name: string
     port: string
@@ -250,7 +373,9 @@ export const getServerSideProps: GetServerSideProps<{
   return {
     props: {
       bundleFile,
-      project: data
+      project: data,
+      environment:
+        process.env.NODE_ENV === 'production' ? 'production' : 'development'
     }
   }
 }
