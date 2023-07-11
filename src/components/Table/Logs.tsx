@@ -41,7 +41,7 @@ function Logs({ data, tableContainerProps }: LogsProps) {
                 background={bgColorMapping[msg.type || 'info']}
               >
                 <Td>{moment(msg.timestamp).format('hh:mm:ss.SSS')}</Td>
-                <Td w="full">{msg.message}</Td>
+                <Td w="full">{msg.message.toString()}</Td>
               </Tr>
             ))}
         </Tbody>

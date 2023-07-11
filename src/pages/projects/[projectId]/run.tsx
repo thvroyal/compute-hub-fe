@@ -94,6 +94,11 @@ const RunProject = ({
 
   const userId = session?.user.name
 
+  const url =
+    environment === 'production'
+      ? `ws://${project?.host.replace('\n', '')}:${project?.port}`
+      : `ws://localhost:${project?.port}`
+
   let processor: any = null
   let connectTimeout: any
 
@@ -114,12 +119,11 @@ const RunProject = ({
     processor = null
     setTimeout(() => {
       console.log('connecting over WebSocket')
-      const url =
-        environment === 'production'
-          ? `ws://${project?.host.replace('\n', '')}:${project?.port}/volunteer`
-          : `ws://localhost:${project?.port}/volunteer`
 
-      processor = window.volunteer['websocket'](url, window.bundle)
+      processor = window.volunteer['websocket'](
+        `${url}/volunteer`,
+        window.bundle
+      )
       console.log(processor)
 
       processor.on('status', (summary: any) => {
@@ -146,7 +150,6 @@ const RunProject = ({
       })
 
       processor.on('log', (value: any) => {
-        // console.log(value)
         setLogs((current) => [value, ...current])
       })
 
@@ -160,10 +163,7 @@ const RunProject = ({
       }, 30 * 1000)
     }, Math.floor(Math.random() * 1000))
 
-    const url = `ws://localhost:${project?.port}/volunteer-monitoring`
-    console.log(url)
-
-    const monitoringSocket = new WebSocket(url)
+    const monitoringSocket = new WebSocket(`${url}/volunteer-monitoring`)
     socketRef.current = monitoringSocket
 
     monitoringSocket.onopen = () => {
