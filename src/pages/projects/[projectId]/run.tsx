@@ -72,7 +72,8 @@ const initialStatus: ReportStatus = {
 
 const RunProject = ({
   bundleFile,
-  project
+  project,
+  environment
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const [restarting, setRestarting] = useState<boolean>(false)
   const [status, setStatus] = useState<Status>(Status.LOADING)
@@ -113,11 +114,10 @@ const RunProject = ({
     processor = null
     setTimeout(() => {
       console.log('connecting over WebSocket')
-      // for run pando locally
-      const url = `ws://localhost:${project?.port}/volunteer`
-      // const url = `ws://${project?.host.replace('\n', '')}:${
-      //   project?.port
-      // }/volunteer`
+      const url =
+        environment === 'production'
+          ? `ws://${project?.host.replace('\n', '')}:${project?.port}/volunteer`
+          : `ws://localhost:${project?.port}/volunteer`
 
       processor = window.volunteer['websocket'](url, window.bundle)
       console.log(processor)
@@ -196,10 +196,6 @@ const RunProject = ({
     }
   }
 
-  // useEffect(() => {
-  //   console.log(reportStatus)
-  // }, [reportStatus])
-
   useEffect(() => {
     setReportStatus((prev) => ({
       ...prev,
@@ -208,10 +204,6 @@ const RunProject = ({
       dataTransferTime: 0
     }))
   }, [submitState])
-
-  // useEffect(() => {
-  //   console.log(reportStatus)
-  // }, [submitState])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -366,6 +358,7 @@ export default RunProject
 
 export const getServerSideProps: GetServerSideProps<{
   bundleFile: string | undefined
+  environment: 'production' | 'development'
   project: {
     name: string
     port: string
@@ -380,7 +373,9 @@ export const getServerSideProps: GetServerSideProps<{
   return {
     props: {
       bundleFile,
-      project: data
+      project: data,
+      environment:
+        process.env.NODE_ENV === 'production' ? 'production' : 'development'
     }
   }
 }
