@@ -13,6 +13,7 @@ import { useStopwatch } from 'react-timer-hook'
 import animations from 'theme/animations'
 import { formatStopWatch } from 'utils/formatData'
 import { ReportStatus, calculate } from 'helpers/compute'
+import { useSession } from 'next-auth/react'
 
 declare global {
   interface Window {
@@ -88,6 +89,9 @@ const RunProject = ({
   const [reportStatus, setReportStatus] = useState<ReportStatus>(initialStatus)
   const [submitState, setSubmitState] = useState(false)
   const socketRef = useRef<WebSocket | null>(null)
+  const { data: session } = useSession()
+
+  const userId = session?.user.name
 
   let processor: any = null
   let connectTimeout: any
@@ -183,14 +187,18 @@ const RunProject = ({
     const { dataTransferLoads, throughputs, cpuUsages, ...sendData } = info
     const sendData2 = {
       //Mock
-      id: Math.floor(Math.random() * 200),
+      userId: userId,
       ...sendData
     }
-
+    // console.log(sendData2)
     if (socketRef.current) {
       socketRef.current.send(JSON.stringify(sendData2))
     }
   }
+
+  // useEffect(() => {
+  //   console.log(reportStatus)
+  // }, [reportStatus])
 
   useEffect(() => {
     setReportStatus((prev) => ({
@@ -201,13 +209,16 @@ const RunProject = ({
     }))
   }, [submitState])
 
+  // useEffect(() => {
+  //   console.log(reportStatus)
+  // }, [submitState])
+
   useEffect(() => {
     const interval = setInterval(() => {
       setReportStatus((prevStatus) => {
         const updatedStatus = { ...prevStatus }
         calculate(updatedStatus, setReportStatus)
         submit(updatedStatus)
-        // console.log('Report', updatedStatus)
         return updatedStatus
       })
       setSubmitState((prevState) => !prevState)
@@ -217,6 +228,7 @@ const RunProject = ({
   }, [submitState])
 
   const report = (deltaTime: number) => {
+    // console.log(deltaTime)
     setReportStatus((prevStatus) => ({
       ...prevStatus,
       nbItems: prevStatus.nbItems + 1,
