@@ -185,14 +185,12 @@ const RunProject = ({
 
   const submit = (info: ReportStatus) => {
     const { dataTransferLoads, throughputs, cpuUsages, ...sendData } = info
-    const sendData2 = {
-      //Mock
+    const reportData = {
       userId: userId,
       ...sendData
     }
-    // console.log(sendData2)
     if (socketRef.current) {
-      socketRef.current.send(JSON.stringify(sendData2))
+      socketRef.current.send(JSON.stringify(reportData))
     }
   }
 
@@ -220,7 +218,6 @@ const RunProject = ({
   }, [submitState])
 
   const report = (deltaTime: number) => {
-    // console.log(deltaTime)
     setReportStatus((prevStatus) => ({
       ...prevStatus,
       nbItems: prevStatus.nbItems + 1,
