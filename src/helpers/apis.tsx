@@ -132,3 +132,20 @@ export const getProjectById = async (id: string) => {
     }
   }
 }
+
+export const getProjectReport = async (bucketId: string) => {
+  try {
+    const response = await axios.get('/monitoring', {
+      params: {
+        bucketId: bucketId
+      }
+    })
+    return { data: response.data, error: null }
+  } catch (error) {
+    const baseError = error as AxiosError<{ message: string }>
+    return {
+      error: baseError.response?.data.message || baseError.message,
+      data: null
+    }
+  }
+}

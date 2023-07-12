@@ -17,17 +17,8 @@ import {
   ThroughputData,
   getThroughput,
   renderActiveShape
-} from '../../../helpers/compute'
-import mock from '../../../helpers/mock.json'
-
-const data = mock.contributions
-
-const resultData: ThroughputData[] = []
-
-// Push the throughput values to the result array using the getThroughput function
-data.map((contribution) => {
-  resultData.push(getThroughput(contribution))
-})
+} from 'helpers/compute'
+import { getProjectReport } from '../../../helpers/apis'
 
 const DynamicBarChart = dynamic(
   () => import('recharts').then((module) => module.BarChart),
@@ -44,10 +35,45 @@ const DynamicPieChart = dynamic(
 )
 
 const ProjectAnalytics = () => {
-  const [isClient, setIsClient] = useState(false)
+  const [data, setData] = useState<any[]>([{}])
+  const [throughputData, setThroughtputData] = useState<ThroughputData[]>([])
+  const isClient = false
 
   useEffect(() => {
-    setIsClient(true)
+    console.log(data)
+  }, [data])
+
+  const setDataForHistorical = async (input: any) => {
+    const resultDataTmp: ThroughputData[] = []
+    input.map((contribution: any) => {
+      resultDataTmp.push(getThroughput(contribution))
+    })
+    return resultDataTmp
+  }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await getProjectReport('xxx')
+        const responseData = Object.values(res.data)
+        if (!responseData) {
+          throw new Error(`${res.error}`)
+        }
+        await setData(responseData)
+        const dataForHistorical = await setDataForHistorical(responseData)
+        setThroughtputData(dataForHistorical)
+      } catch (e) {
+        console.error('Fetch error', e)
+      }
+    }
+
+    fetchData()
+
+    const interval = setInterval(fetchData, 3000)
+
+    return () => {
+      clearInterval(interval)
+    }
   }, [])
 
   const [activeIndex, setActiveIndex] = useState(0)
@@ -83,7 +109,7 @@ const ProjectAnalytics = () => {
           justifyContent={'center'}
           alignItems={'center'}
         >
-          {isClient && (
+          {false && (
             <DynamicBarChart
               width={500}
               height={400}
@@ -171,7 +197,7 @@ const ProjectAnalytics = () => {
             <AreaChart
               width={1000}
               height={400}
-              data={resultData}
+              data={throughputData}
               margin={{
                 top: 40,
                 right: 30,
@@ -197,7 +223,7 @@ const ProjectAnalytics = () => {
                   }
                 ]}
               />
-              {Object.keys(resultData[0] || {})
+              {Object.keys(throughputData[0] || {})
                 .filter((key) => key !== 'time') // Exclude the 'time' key from rendering as an area
                 .map((user, index) => (
                   <Area
