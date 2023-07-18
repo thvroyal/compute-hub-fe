@@ -17,37 +17,24 @@ import { GetStaticProps, InferGetStaticPropsType } from 'next'
 import { useRouter } from 'next/router'
 import path from 'path'
 import { Project } from 'types/Project'
-
-const detailData = [
-  {
-    key: 'unprocessed_unit',
-    label: 'Unprocessed Unit',
-    value: '1,000,000'
-  },
-  {
-    key: 'estimated_time',
-    label: 'Estimated Time',
-    value: '30hrs'
-  },
-  {
-    key: 'authors',
-    label: 'Authors',
-    value: 'thvroyal'
-  },
-  {
-    key: 'created_at',
-    label: 'Created At',
-    value: 'Mar 20, 2021'
-  }
-]
+import { GrDocumentTxt } from 'react-icons/gr'
+import { useSession } from 'next-auth/react'
+import { getDetailProjectData } from 'helpers'
 
 const DetailProject = (
   props: InferGetStaticPropsType<typeof getStaticProps>
 ) => {
   const router = useRouter()
+  const { data: session } = useSession()
   const { description, project } = props
-  const { name } = project || {}
+  const { name, author } = project || {}
   const { contentHtml } = description || {}
+
+  const detailData = getDetailProjectData(project)
+
+  const isAuthor = session?.user.id === author.id
+
+  const isShowDownloadOutputBtn = isAuthor
 
   const clickRunButton = () => {
     router.push({ pathname: `/projects/${project.id}/run` })
@@ -123,6 +110,17 @@ const DetailProject = (
                 View analytics
               </Button>
             </HStack>
+            {isShowDownloadOutputBtn && (
+              <Button
+                variant="outline"
+                colorScheme="gray"
+                w="full"
+                onClick={clickAnalyticsButton}
+                leftIcon={<GrDocumentTxt />}
+              >
+                Download Results
+              </Button>
+            )}
           </VStack>
         </GridItem>
         <GridItem
