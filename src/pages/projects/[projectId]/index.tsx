@@ -160,7 +160,7 @@ export async function getStaticPaths() {
   const { data } = await getProjects()
   const projects = data?.projects || []
   const paths = projects.map((project: Project) => ({
-    params: { projectId: project.id }
+    params: { projectId: project.id, projectName: project.name }
   }))
 
   return { paths, fallback: true }

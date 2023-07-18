@@ -14,11 +14,15 @@ import {
   Area
 } from 'recharts'
 import {
-  ThroughputData,
-  getThroughput,
+  chartData,
+  getChartData,
+  getHighestAverageOutputUser,
+  getHistoricalData,
   renderActiveShape
 } from 'helpers/compute'
 import { getProjectReport } from '../../../helpers/apis'
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
+import { getProjectById } from 'helpers/apis'
 
 const DynamicBarChart = dynamic(
   () => import('recharts').then((module) => module.BarChart),
@@ -34,34 +38,26 @@ const DynamicPieChart = dynamic(
   }
 )
 
-const ProjectAnalytics = () => {
-  const [data, setData] = useState<any[]>([{}])
-  const [throughputData, setThroughtputData] = useState<ThroughputData[]>([])
-  const isClient = false
-
-  useEffect(() => {
-    console.log(data)
-  }, [data])
-
-  const setDataForHistorical = async (input: any) => {
-    const resultDataTmp: ThroughputData[] = []
-    input.map((contribution: any) => {
-      resultDataTmp.push(getThroughput(contribution))
-    })
-    return resultDataTmp
-  }
+const ProjectAnalytics = ({
+  prop
+}: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+  const [data, setData] = useState<chartData[]>([])
+  const [historicalChartData, setHistoricalChartData] = useState<any[]>([])
+  const [activeIndex, setActiveIndex] = useState(0)
+  const isClient = true
+  const { bucketId, name: projectName } = prop
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await getProjectReport('xxx')
-        const responseData = Object.values(res.data)
-        if (!responseData) {
-          throw new Error(`${res.error}`)
-        }
-        await setData(responseData)
-        const dataForHistorical = await setDataForHistorical(responseData)
-        setThroughtputData(dataForHistorical)
+        const response = await getProjectReport(bucketId)
+
+        const chartData = getChartData(response.data.projectReport)
+        setData(chartData)
+        const historicalData = getHistoricalData(chartData)
+        setHistoricalChartData(historicalData)
+        // console.log(chartData)
+        // console.log(historicalData)
       } catch (e) {
         console.error('Fetch error', e)
       }
@@ -76,20 +72,37 @@ const ProjectAnalytics = () => {
     }
   }, [])
 
-  const [activeIndex, setActiveIndex] = useState(0)
-
   const onPieEnter = (_: any, index: number) => {
     setActiveIndex(index)
   }
 
-  const areaColors: string[] = ['#8884d8', '#82ca9d', '#ffc658']
+  const CustomTickFormatData = (props: any) => {
+    const date = new Date(props.payload.value)
+
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+
+    const formattedDate = formatter.format(date)
+
+    return (
+      <g transform={`translate(${props.x},${props.y})`}>
+        <text x={0} y={0} dy={16} textAnchor="end" fill="#666">
+          {formattedDate}
+        </text>
+      </g>
+    )
+  }
 
   return (
     <Container my="10">
       <Heading pb={10}>Volunteers Monitoring</Heading>
 
       <Heading color="#8884d8" pb={10}>
-        Project ABC_XYC
+        {projectName}
       </Heading>
 
       {/* Absolute Throughput  */}
@@ -109,11 +122,11 @@ const ProjectAnalytics = () => {
           justifyContent={'center'}
           alignItems={'center'}
         >
-          {false && (
+          {isClient && (
             <DynamicBarChart
               width={500}
               height={400}
-              data={data[data.length - 1].contribution}
+              data={getHighestAverageOutputUser(data)}
               margin={{
                 top: 30,
                 right: 30,
@@ -123,7 +136,7 @@ const ProjectAnalytics = () => {
               barSize={20}
             >
               <XAxis
-                dataKey="id"
+                dataKey="userName"
                 scale="point"
                 padding={{ left: 50, right: 50 }}
               />
@@ -132,8 +145,8 @@ const ProjectAnalytics = () => {
               <Legend />
               <CartesianGrid strokeDasharray="3 3" />
               <Bar
-                name="Absolute Throughtput"
-                dataKey="throughput"
+                name="Highest average output users"
+                dataKey="average"
                 fill="#8884d8"
                 background={{ fill: '#eee' }}
               />
@@ -155,22 +168,22 @@ const ProjectAnalytics = () => {
           {isClient && (
             <DynamicPieChart width={500} height={400}>
               <Pie
-                // name="Throughput"
+                name="Throughput"
                 activeIndex={activeIndex}
                 activeShape={renderActiveShape}
-                data={data[data.length - 1].contribution}
+                data={getHighestAverageOutputUser(data)}
                 cx="50%"
                 cy="50%"
                 innerRadius={60}
                 outerRadius={100}
                 fill="#8884d8"
-                dataKey="throughput"
+                dataKey="average"
                 onMouseEnter={onPieEnter}
               />
               <Legend
                 payload={[
                   {
-                    value: 'Relative Throughtput',
+                    value: 'Relative average output',
                     color: '#8884d8',
                     type: 'rect'
                   }
@@ -195,53 +208,46 @@ const ProjectAnalytics = () => {
         >
           {isClient && (
             <AreaChart
-              width={1000}
+              width={1200}
               height={400}
-              data={throughputData}
+              data={historicalChartData}
               margin={{
-                top: 40,
+                top: 10,
                 right: 30,
                 left: 0,
-                bottom: 30
+                bottom: 0
               }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="time"
-                type="number"
-                domain={['auto', 'auto']}
-                tickFormatter={(time) => new Date(time).toLocaleTimeString()}
-              />
+              <XAxis dataKey="timestamp" tick={<CustomTickFormatData />} />
               <YAxis />
               <Tooltip />
-              <Legend
-                payload={[
-                  {
-                    value: 'Historical Throughtput',
-                    color: '#8884d8',
-                    type: 'rect'
-                  }
-                ]}
+              <Area
+                label={'Total Output'}
+                name="Total Output"
+                type="monotone"
+                dataKey="total"
+                stroke="#8884d8"
+                fill="#8884d8"
               />
-              {Object.keys(throughputData[0] || {})
-                .filter((key) => key !== 'time') // Exclude the 'time' key from rendering as an area
-                .map((user, index) => (
-                  <Area
-                    name="Historical Throughput"
-                    isAnimationActive={false}
-                    key={user}
-                    type="monotone"
-                    dataKey={user}
-                    stackId="1"
-                    fill={areaColors[index % areaColors.length]}
-                  />
-                ))}
             </AreaChart>
           )}
         </Flex>
       </Flex>
     </Container>
   )
+}
+
+export const getServerSideProps: GetServerSideProps<{
+  prop: any
+}> = async (context) => {
+  const { projectId = '' } = context.params || {}
+  const { data } = await getProjectById(projectId.toString())
+  return {
+    props: {
+      prop: data
+    }
+  }
 }
 
 export default ProjectAnalytics

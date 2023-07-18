@@ -41,6 +41,7 @@ const statusColor = {
 const MAX_SCRIPTS = 2
 
 const initialStatus: ReportStatus = {
+  totalItems: 0,
   cpuTime: 0,
   dataTransferTime: 0,
   nbItems: 0,
@@ -93,6 +94,7 @@ const RunProject = ({
   const { data: session } = useSession()
 
   const userId = session?.user.id
+  const userName = session?.user.name
 
   const url =
     environment === 'production'
@@ -187,6 +189,7 @@ const RunProject = ({
     const { dataTransferLoads, throughputs, cpuUsages, ...sendData } = info
     const reportData = {
       userId: userId,
+      userName: userName,
       ...sendData
     }
     if (socketRef.current) {
@@ -220,6 +223,7 @@ const RunProject = ({
   const report = (deltaTime: number) => {
     setReportStatus((prevStatus) => ({
       ...prevStatus,
+      totalItems: prevStatus.totalItems + 1,
       nbItems: prevStatus.nbItems + 1,
       cpuTime: prevStatus.cpuTime + deltaTime,
       dataTransferTime: prevStatus.dataTransferTime + 0

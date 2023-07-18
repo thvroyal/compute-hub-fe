@@ -2,6 +2,7 @@ import { Dispatch, SetStateAction } from 'react'
 import { Sector } from 'recharts'
 
 export interface ReportStatus {
+  totalItems: number
   cpuTime: number
   dataTransferTime: number
   nbItems: number
@@ -85,13 +86,14 @@ export const calculate = (
   const reportInfo = {
     cpuTime: info.cpuTime || 1000,
     dataTransferTime: info.dataTransferTime || 0,
-    nbItems: info.nbItems || 1
+    nbItems: info.nbItems || 0
   }
 
   const duration = 3000
 
   setReportStatus((prevStatus) => ({
     ...prevStatus,
+    totalItems: prevStatus.totalItems + reportInfo.nbItems,
     nbItems: prevStatus.nbItems + reportInfo.nbItems,
     cpuTime: prevStatus.cpuTime + reportInfo.cpuTime,
     dataTransferTime: prevStatus.dataTransferTime + reportInfo.dataTransferTime,
@@ -143,7 +145,7 @@ export const renderActiveShape = (props: any) => {
     fill,
     payload,
     percent,
-    throughput
+    average
   } = props
   const sin = Math.sin(-RADIAN * midAngle)
   const cos = Math.cos(-RADIAN * midAngle)
@@ -158,7 +160,7 @@ export const renderActiveShape = (props: any) => {
   return (
     <g>
       <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill}>
-        {payload.id}
+        {`${average.toFixed(2)} OPS`}
       </text>
       <Sector
         cx={cx}
@@ -189,7 +191,9 @@ export const renderActiveShape = (props: any) => {
         y={ey}
         textAnchor={textAnchor}
         fill="#333"
-      >{`Throughput ${throughput.toFixed(2)}`}</text>
+      >
+        {payload.userName}
+      </text>
       <text
         x={ex + (cos >= 0 ? 1 : -1) * 12}
         y={ey}
@@ -197,29 +201,102 @@ export const renderActiveShape = (props: any) => {
         textAnchor={textAnchor}
         fill="#999"
       >
-        {`(Rate ${(percent * 100).toFixed(2)}%)`}
+        {`(${(percent * 100).toFixed(2)}%)`}
       </text>
     </g>
   )
 }
 
-export interface ThroughputData {
-  time: number
-  [key: string]: number
+export interface chartData {
+  userId: string
+  userName: string
+  average: number
+  timestamp: number
 }
 
-export const getThroughput = (data: any) => {
-  const throughputData: ThroughputData = { time: 0 }
+export const getChartData = (data: any) => {
+  const expectedData: chartData[] = []
 
-  data.contribution.forEach((contribution: any) => {
-    const { id, throughput } = contribution
-    throughputData[id] = throughput
-  })
+  data.reduce(
+    (
+      accumulator: {
+        userId: string
+        userName: string
+        average: number
+        timestamp: number
+      }[],
+      obj: { contribution: any[]; timestamp: number }
+    ) => {
+      obj.contribution.forEach((contribution) => {
+        const newObj = {
+          userId: contribution.userId,
+          userName: contribution.userName,
+          average: contribution.throughputStats.average,
+          timestamp: obj.timestamp
+        }
+        accumulator.push(newObj)
+      })
+      return accumulator
+    },
+    expectedData
+  )
 
-  const throughputObject = {
-    ...throughputData,
-    time: Date.parse(data.timestamp)
-  }
+  return expectedData
+}
 
-  return throughputObject
+export const getHistoricalData = (data: any) => {
+  const result = Object.values(
+    data.reduce(
+      (
+        accumulator: { [x: string]: { timestamp: number; total: number } },
+        obj: { timestamp: number; average: number }
+      ) => {
+        const { timestamp, average } = obj
+        if (accumulator[timestamp]) {
+          accumulator[timestamp].total += average
+        } else {
+          accumulator[timestamp] = { timestamp, total: average }
+        }
+        return accumulator
+      },
+      {}
+    )
+  )
+
+  return result
+}
+
+export const getHighestAverageOutputUser = (data: any) => {
+  // Group the data by user and calculate average for each user
+  const userAverages = data.reduce(
+    (
+      accumulator: {
+        [x: string]: { userId: string; userName: string; average: number }
+      },
+      obj: { userId: string; userName: string; average: number }
+    ) => {
+      if (
+        !accumulator[obj.userId] ||
+        accumulator[obj.userId].average < obj.average
+      ) {
+        accumulator[obj.userId] = {
+          userId: obj.userId,
+          userName: obj.userName,
+          average: obj.average
+        }
+      }
+      return accumulator
+    },
+    {}
+  )
+  console.log(userAverages)
+  // Sort the users by average in descending order
+  const sortedUsers = Object.values(userAverages).sort(
+    (a: any, b: any) => b.average - a.average
+  )
+  // Find the two different users with highest averages
+  const topUsers = sortedUsers.slice(0, 2)
+  // return topUsers
+
+  return topUsers
 }
