@@ -1,7 +1,7 @@
 import { Flex, Heading } from '@chakra-ui/react'
 import Container from 'components/Container'
 import dynamic from 'next/dynamic'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Bar,
   XAxis,
@@ -11,18 +11,23 @@ import {
   Legend,
   Pie,
   AreaChart,
-  Area
+  Area,
+  Cell,
+  ResponsiveContainer
 } from 'recharts'
 import {
   chartData,
   getChartData,
   getHighestAverageOutputUser,
   getHistoricalData,
-  renderActiveShape
+  getNumberOfOutputByUserId,
+  renderActiveShape,
+  renderCustomizedLabel
 } from 'helpers/compute'
 import { getProjectReport } from '../../../helpers/apis'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { getProjectById } from 'helpers/apis'
+import { useSession } from 'next-auth/react'
 
 const DynamicBarChart = dynamic(
   () => import('recharts').then((module) => module.BarChart),
@@ -43,21 +48,43 @@ const ProjectAnalytics = ({
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const [data, setData] = useState<chartData[]>([])
   const [historicalChartData, setHistoricalChartData] = useState<any[]>([])
+  const [totalChart, setTotalChart] = useState<any[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
   const isClient = true
   const { bucketId, name: projectName } = prop
+
+  const { data: session } = useSession()
+  const userId = session?.user.id
+  const userName = session?.user.name
+
+  useEffect(() => {
+    console.log(totalChart), [totalChart]
+  })
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await getProjectReport(bucketId)
 
-        const chartData = getChartData(response.data.projectReport)
+        const chartData = getChartData(
+          response.data.projectReport.contributions
+        )
+        console.log(response.data.projectReport)
+
         setData(chartData)
+        const userTotalOutput = getNumberOfOutputByUserId(
+          response.data.projectReport.totalOutput,
+          userId
+        )
+        setTotalChart([
+          { name: userName, value: userTotalOutput },
+          {
+            name: 'Other',
+            value: response.data.projectReport.totalInput - userTotalOutput
+          }
+        ])
         const historicalData = getHistoricalData(chartData)
         setHistoricalChartData(historicalData)
-        // console.log(chartData)
-        // console.log(historicalData)
       } catch (e) {
         console.error('Fetch error', e)
       }
@@ -97,26 +124,31 @@ const ProjectAnalytics = ({
     )
   }
 
-  return (
-    <Container my="10">
-      <Heading pb={10}>Volunteers Monitoring</Heading>
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042']
 
+  return (
+    <Container
+      backgroundColor="gray.100"
+      py="10"
+      px={'10%'}
+      maxW={'none'}
+      flex={'wrap'}
+    >
+      <Heading color="gray.600" pb={10}>
+        Volunteers Monitoring
+      </Heading>
       <Heading color="#8884d8" pb={10}>
         {projectName}
       </Heading>
 
       {/* Absolute Throughput  */}
-
-      <Flex
-        flexWrap="wrap"
-        gap="32px"
-        w="full"
-        justifyContent={'space-between'}
-      >
+      <Flex flexWrap="wrap" gap="32px" w="full" justifyContent="space-around">
         <Flex
-          w="min(100%, 45%)"
+          // w="min(100%, 55%)"
           flexDir="column"
           border="1px solid"
+          backgroundColor={'white'}
+          shadow={'lg'}
           borderRadius="16px"
           borderColor="gray.200"
           justifyContent={'center'}
@@ -124,7 +156,7 @@ const ProjectAnalytics = ({
         >
           {isClient && (
             <DynamicBarChart
-              width={500}
+              width={400}
               height={400}
               data={getHighestAverageOutputUser(data)}
               margin={{
@@ -157,16 +189,18 @@ const ProjectAnalytics = ({
         {/* Relative Throughput  */}
 
         <Flex
-          w="min(100%, 45%)"
+          // w="min(100%, 45%)"
           flexDir="column"
           border="1px solid"
           borderRadius="16px"
+          backgroundColor={'white'}
+          shadow={'lg'}
           borderColor="gray.200"
           justifyContent={'center'}
           alignItems={'center'}
         >
           {isClient && (
-            <DynamicPieChart width={500} height={400}>
+            <DynamicPieChart width={400} height={400}>
               <Pie
                 name="Throughput"
                 activeIndex={activeIndex}
@@ -194,43 +228,90 @@ const ProjectAnalytics = ({
           )}
         </Flex>
 
-        {/* Historical Throughput */}
-
+        {/* Total Output */}
         <Flex
-          w="min(100%, 100%)"
+          // w="min(100%, 45%)"
+          backgroundColor={'white'}
+          shadow={'lg'}
           flexDir="column"
           border="1px solid"
           borderRadius="16px"
           borderColor="gray.200"
           justifyContent={'center'}
           alignItems={'center'}
+        >
+          <DynamicPieChart width={400} height={400}>
+            <Pie
+              data={totalChart}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={renderCustomizedLabel}
+              outerRadius={100}
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {data.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={COLORS[index % COLORS.length]}
+                />
+              ))}
+            </Pie>
+            <Legend
+              payload={[
+                {
+                  value: 'User total output / input',
+                  color: '#8884d8',
+                  type: 'rect'
+                }
+              ]}
+              height={55}
+            />
+          </DynamicPieChart>
+        </Flex>
+        {/* Historical Throughput */}
+
+        <Flex
+          id="historical-contanier"
+          w="min(100%, 100%)"
+          flexDir="column"
+          border="1px solid"
+          borderRadius="16px"
+          backgroundColor={'white'}
+          shadow={'lg'}
+          borderColor="gray.200"
+          justifyContent={'center'}
+          alignItems={'center'}
           mt={50}
         >
           {isClient && (
-            <AreaChart
-              width={1200}
-              height={400}
-              data={historicalChartData}
-              margin={{
-                top: 10,
-                right: 30,
-                left: 0,
-                bottom: 0
-              }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="timestamp" tick={<CustomTickFormatData />} />
-              <YAxis />
-              <Tooltip />
-              <Area
-                label={'Total Output'}
-                name="Total Output"
-                type="monotone"
-                dataKey="total"
-                stroke="#8884d8"
-                fill="#8884d8"
-              />
-            </AreaChart>
+            <ResponsiveContainer minHeight={400} minWidth={400}>
+              <AreaChart
+                width={600}
+                height={400}
+                data={historicalChartData}
+                margin={{
+                  top: 50,
+                  right: 30,
+                  left: 0,
+                  bottom: 30
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="timestamp" tick={<CustomTickFormatData />} />
+                <YAxis />
+                <Tooltip />
+                <Area
+                  label={'Total Output'}
+                  name="Total Output"
+                  type="monotone"
+                  dataKey="total"
+                  stroke="#8884d8"
+                  fill="#8884d8"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           )}
         </Flex>
       </Flex>

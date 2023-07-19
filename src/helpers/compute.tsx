@@ -2,7 +2,7 @@ import { Dispatch, SetStateAction } from 'react'
 import { Sector } from 'recharts'
 
 export interface ReportStatus {
-  totalItems: number
+  totalOutput: number
   cpuTime: number
   dataTransferTime: number
   nbItems: number
@@ -93,7 +93,7 @@ export const calculate = (
 
   setReportStatus((prevStatus) => ({
     ...prevStatus,
-    totalItems: prevStatus.totalItems + reportInfo.nbItems,
+    totalOutput: prevStatus.totalOutput + reportInfo.nbItems,
     nbItems: prevStatus.nbItems + reportInfo.nbItems,
     cpuTime: prevStatus.cpuTime + reportInfo.cpuTime,
     dataTransferTime: prevStatus.dataTransferTime + reportInfo.dataTransferTime,
@@ -207,10 +207,37 @@ export const renderActiveShape = (props: any) => {
   )
 }
 
+export const renderCustomizedLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent
+}: any) => {
+  const RADIAN = Math.PI / 180
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor={x > cx ? 'start' : 'end'}
+      dominantBaseline="central"
+    >
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  )
+}
+
 export interface chartData {
   userId: string
   userName: string
   average: number
+  totalOutput: number
   timestamp: number
 }
 
@@ -221,6 +248,7 @@ export const getChartData = (data: any) => {
     (
       accumulator: {
         userId: string
+        totalOutput: number
         userName: string
         average: number
         timestamp: number
@@ -230,6 +258,7 @@ export const getChartData = (data: any) => {
       obj.contribution.forEach((contribution) => {
         const newObj = {
           userId: contribution.userId,
+          totalOutput: contribution.totalOutput,
           userName: contribution.userName,
           average: contribution.throughputStats.average,
           timestamp: obj.timestamp
@@ -289,7 +318,7 @@ export const getHighestAverageOutputUser = (data: any) => {
     },
     {}
   )
-  console.log(userAverages)
+  // console.log(userAverages)
   // Sort the users by average in descending order
   const sortedUsers = Object.values(userAverages).sort(
     (a: any, b: any) => b.average - a.average
@@ -299,4 +328,9 @@ export const getHighestAverageOutputUser = (data: any) => {
   // return topUsers
 
   return topUsers
+}
+
+export const getNumberOfOutputByUserId = (data: any, id: any) => {
+  const userWithMatchingId = data.find((userId: any) => userId.userId === id)
+  return userWithMatchingId ? userWithMatchingId.numberOfOutput : 0
 }
