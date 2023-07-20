@@ -103,7 +103,7 @@ const ProjectAnalytics = ({
     setActiveIndex(index)
   }
 
-  const CustomTickFormatData = (props: any) => {
+  const CustomTickFormatDate = (props: any) => {
     const date = new Date(props.payload.value)
 
     const formatter = new Intl.DateTimeFormat('en-US', {
@@ -133,16 +133,51 @@ const ProjectAnalytics = ({
       px={'10%'}
       maxW={'none'}
       flex={'wrap'}
+      alignItems="normal"
     >
-      <Heading color="gray.600" pb={10}>
-        Volunteers Monitoring
-      </Heading>
-      <Heading color="#8884d8" pb={10}>
-        {projectName}
-      </Heading>
+      <Flex
+        flexWrap="wrap"
+        gap="32px"
+        w="full"
+        justifyContent={{ base: 'center', md: 'space-between' }}
+        justifyItems={'center'}
+      >
+        <Flex direction={'column'} maxW={400} justifyContent={'space-between'}>
+          <Heading color="gray.600">Volunteers Monitoring</Heading>
+
+          <Heading
+            color="#8884d8"
+            size={{ base: '2xl', md: '3xl' }}
+            textAlign={{ base: 'center', md: 'left' }}
+          >
+            {projectName}
+          </Heading>
+        </Flex>
+        <Flex
+          flexDir="column"
+          border="1px solid"
+          backgroundColor={'white'}
+          shadow={'lg'}
+          borderRadius="16px"
+          borderColor="gray.200"
+          justifyContent={'center'}
+          alignItems={'center'}
+          minW={{ base: 350, md: 800 }}
+          minH={150}
+        >
+          More infomation about the project
+        </Flex>
+      </Flex>
 
       {/* Absolute Throughput  */}
-      <Flex flexWrap="wrap" gap="32px" w="full" justifyContent="space-around">
+      <Flex
+        mt={50}
+        flexWrap="wrap"
+        gap="32px"
+        w="full"
+        justifyContent={{ base: 'center', md: 'space-between' }}
+        justifyItems={'center'}
+      >
         <Flex
           // w="min(100%, 55%)"
           flexDir="column"
@@ -153,36 +188,39 @@ const ProjectAnalytics = ({
           borderColor="gray.200"
           justifyContent={'center'}
           alignItems={'center'}
+          minW={{ base: 350, md: 400 }}
         >
           {isClient && (
-            <DynamicBarChart
-              width={400}
-              height={400}
-              data={getHighestAverageOutputUser(data)}
-              margin={{
-                top: 30,
-                right: 30,
-                left: 20,
-                bottom: 30
-              }}
-              barSize={20}
-            >
-              <XAxis
-                dataKey="userName"
-                scale="point"
-                padding={{ left: 50, right: 50 }}
-              />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <CartesianGrid strokeDasharray="3 3" />
-              <Bar
-                name="Highest average output users"
-                dataKey="average"
-                fill="#8884d8"
-                background={{ fill: '#eee' }}
-              />
-            </DynamicBarChart>
+            <ResponsiveContainer minWidth={350} aspect={1}>
+              <DynamicBarChart
+                width={350}
+                height={350}
+                data={getHighestAverageOutputUser(data)}
+                margin={{
+                  top: 30,
+                  right: 30,
+                  left: 20,
+                  bottom: 30
+                }}
+                barSize={20}
+              >
+                <XAxis
+                  dataKey="userName"
+                  scale="point"
+                  padding={{ left: 50, right: 50 }}
+                />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <CartesianGrid strokeDasharray="3 3" />
+                <Bar
+                  name="Highest average output users"
+                  dataKey="average"
+                  fill="#8884d8"
+                  background={{ fill: '#eee' }}
+                />
+              </DynamicBarChart>
+            </ResponsiveContainer>
           )}
         </Flex>
 
@@ -198,33 +236,36 @@ const ProjectAnalytics = ({
           borderColor="gray.200"
           justifyContent={'center'}
           alignItems={'center'}
+          minW={{ base: 350, md: 400 }}
         >
           {isClient && (
-            <DynamicPieChart width={400} height={400}>
-              <Pie
-                name="Throughput"
-                activeIndex={activeIndex}
-                activeShape={renderActiveShape}
-                data={getHighestAverageOutputUser(data)}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="average"
-                onMouseEnter={onPieEnter}
-              />
-              <Legend
-                payload={[
-                  {
-                    value: 'Relative average output',
-                    color: '#8884d8',
-                    type: 'rect'
-                  }
-                ]}
-                height={55}
-              />
-            </DynamicPieChart>
+            <ResponsiveContainer minWidth={350} aspect={1}>
+              <DynamicPieChart>
+                <Pie
+                  name="Throughput"
+                  activeIndex={activeIndex}
+                  activeShape={renderActiveShape}
+                  data={getHighestAverageOutputUser(data)}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="average"
+                  onMouseEnter={onPieEnter}
+                />
+                <Legend
+                  payload={[
+                    {
+                      value: 'Relative average output',
+                      color: '#8884d8',
+                      type: 'rect'
+                    }
+                  ]}
+                  height={55}
+                />
+              </DynamicPieChart>
+            </ResponsiveContainer>
           )}
         </Flex>
 
@@ -239,36 +280,39 @@ const ProjectAnalytics = ({
           borderColor="gray.200"
           justifyContent={'center'}
           alignItems={'center'}
+          minW={{ base: 350, md: 400 }}
         >
-          <DynamicPieChart width={400} height={400}>
-            <Pie
-              data={totalChart}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={renderCustomizedLabel}
-              outerRadius={100}
-              fill="#8884d8"
-              dataKey="value"
-            >
-              {data.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={COLORS[index % COLORS.length]}
-                />
-              ))}
-            </Pie>
-            <Legend
-              payload={[
-                {
-                  value: 'User total output / input',
-                  color: '#8884d8',
-                  type: 'rect'
-                }
-              ]}
-              height={55}
-            />
-          </DynamicPieChart>
+          <ResponsiveContainer minWidth={350} aspect={1}>
+            <DynamicPieChart>
+              <Pie
+                data={totalChart}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={renderCustomizedLabel}
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {data.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                ))}
+              </Pie>
+              <Legend
+                payload={[
+                  {
+                    value: 'User total output / input',
+                    color: '#8884d8',
+                    type: 'rect'
+                  }
+                ]}
+                height={55}
+              />
+            </DynamicPieChart>
+          </ResponsiveContainer>
         </Flex>
         {/* Historical Throughput */}
 
@@ -283,13 +327,12 @@ const ProjectAnalytics = ({
           borderColor="gray.200"
           justifyContent={'center'}
           alignItems={'center'}
-          mt={50}
+          minW={{ base: 350, md: 400 }}
+          mt={{ base: '0', md: '50' }}
         >
           {isClient && (
-            <ResponsiveContainer minHeight={400} minWidth={400}>
+            <ResponsiveContainer minHeight={350} minWidth={350}>
               <AreaChart
-                width={600}
-                height={400}
                 data={historicalChartData}
                 margin={{
                   top: 50,
@@ -299,7 +342,7 @@ const ProjectAnalytics = ({
                 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="timestamp" tick={<CustomTickFormatData />} />
+                <XAxis dataKey="timestamp" tick={<CustomTickFormatDate />} />
                 <YAxis />
                 <Tooltip />
                 <Area
