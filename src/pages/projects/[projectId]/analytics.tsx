@@ -1,7 +1,7 @@
-import { Flex, Heading } from '@chakra-ui/react'
+import { Flex, Heading, Text, VStack } from '@chakra-ui/react'
 import Container from 'components/Container'
 import dynamic from 'next/dynamic'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Bar,
   XAxis,
@@ -28,6 +28,7 @@ import { getProjectReport } from '../../../helpers/apis'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { getProjectById } from 'helpers/apis'
 import { useSession } from 'next-auth/react'
+import Image from 'next/image'
 
 const DynamicBarChart = dynamic(
   () => import('recharts').then((module) => module.BarChart),
@@ -46,20 +47,25 @@ const DynamicPieChart = dynamic(
 const ProjectAnalytics = ({
   prop
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
-  const [data, setData] = useState<chartData[]>([])
+  const [chartData, setChartData] = useState<chartData[]>([])
   const [historicalChartData, setHistoricalChartData] = useState<any[]>([])
   const [totalChart, setTotalChart] = useState<any[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
+  const [totalOutput, setTotalOutput] = useState<any>({
+    outputs: 0,
+    numberOfUsers: 0,
+    online: 0
+  })
   const isClient = true
-  const { bucketId, name: projectName } = prop
+  const { bucketId, name: projectName, computeInfo } = prop
 
   const { data: session } = useSession()
   const userId = session?.user.id
   const userName = session?.user.name
 
   useEffect(() => {
-    console.log(totalChart), [totalChart]
-  })
+    console.log(totalOutput)
+  }, [totalOutput])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,20 +73,43 @@ const ProjectAnalytics = ({
         const response = await getProjectReport(bucketId)
 
         const chartData = getChartData(
-          response.data.projectReport.contributions
+          response.data.projectReport.contributions,
+          response.data.projectReport.totalOutput
         )
-        console.log(response.data.projectReport)
 
-        setData(chartData)
+        setTotalOutput(() => {
+          const { outputs, numberOfUsers } =
+            response.data.projectReport.totalOutput.reduce(
+              (
+                accumulator: { outputs: number; numberOfUsers: number },
+                obj: { numberOfOutput: number }
+              ) => {
+                return {
+                  outputs: accumulator.outputs + obj.numberOfOutput,
+                  numberOfUsers: accumulator.numberOfUsers + 1
+                }
+              },
+              { outputs: 0, numberOfUsers: 0 }
+            )
+          const onlineUsers =
+            response.data.projectReport.contributions[
+              response.data.projectReport.contributions.length - 1
+            ].contribution.length
+
+          return { outputs, numberOfUsers, online: onlineUsers }
+        })
+
+        setChartData(chartData)
         const userTotalOutput = getNumberOfOutputByUserId(
           response.data.projectReport.totalOutput,
           userId
         )
+
         setTotalChart([
           { name: userName, value: userTotalOutput },
           {
             name: 'Other',
-            value: response.data.projectReport.totalInput - userTotalOutput
+            value: computeInfo.totalInput - userTotalOutput
           }
         ])
         const historicalData = getHistoricalData(chartData)
@@ -142,30 +171,75 @@ const ProjectAnalytics = ({
         justifyContent={{ base: 'center', md: 'space-between' }}
         justifyItems={'center'}
       >
-        <Flex direction={'column'} maxW={400} justifyContent={'space-between'}>
-          <Heading color="gray.600">Volunteers Monitoring</Heading>
+        <Flex direction={'column'} maxW={600} justifyContent={'space-between'}>
+          <Heading color="gray.600" size={{ base: 'lg', md: '2xl' }}>
+            Volunteers Monitoring
+          </Heading>
 
           <Heading
             color="#8884d8"
-            size={{ base: '2xl', md: '3xl' }}
+            size={'2xl'}
             textAlign={{ base: 'center', md: 'left' }}
           >
             {projectName}
           </Heading>
         </Flex>
         <Flex
-          flexDir="column"
+          flexDir={{ base: 'column', md: 'row' }}
           border="1px solid"
           backgroundColor={'white'}
           shadow={'lg'}
           borderRadius="16px"
           borderColor="gray.200"
-          justifyContent={'center'}
-          alignItems={'center'}
+          justifyContent="space-around"
+          alignItems={{ base: '', md: 'center' }}
           minW={{ base: 350, md: 800 }}
           minH={150}
+          gap={5}
+          pl={10}
+          py={5}
+          flexWrap="wrap"
         >
-          More infomation about the project
+          <Flex gap={'5'} minW={200}>
+            <Image src="/img/count_icon.png" width={45} height={45} alt={''} />
+            <VStack spacing="0" align={'flex-start'}>
+              <Text color="gray.600" fontSize="md" lineHeight={6}>
+                Total output
+              </Text>
+              <Text color="gray.500" fontSize="sm" lineHeight={6}>
+                {totalOutput.outputs} / {computeInfo.totalInput}
+              </Text>
+            </VStack>
+          </Flex>
+
+          <Flex gap={'5'} minW={200}>
+            <Image
+              src="/img/volunteers_icon.png"
+              width={50}
+              height={50}
+              alt={''}
+            />
+            <VStack spacing="0" align={'flex-start'}>
+              <Text color="gray.600" fontSize="md" lineHeight={6}>
+                Volunteers
+              </Text>
+              <Text color="gray.500" fontSize="sm" lineHeight={6}>
+                {totalOutput.numberOfUsers}
+              </Text>
+            </VStack>
+          </Flex>
+
+          <Flex gap={'5'} minW={200}>
+            <Image src="/img/online_icon.png" width={50} height={50} alt={''} />
+            <VStack spacing="0" align={'flex-start'}>
+              <Text color="gray.600" fontSize="md" lineHeight={6}>
+                Online
+              </Text>
+              <Text color="gray.500" fontSize="sm" lineHeight={6}>
+                {totalOutput.online}
+              </Text>
+            </VStack>
+          </Flex>
         </Flex>
       </Flex>
 
@@ -195,7 +269,7 @@ const ProjectAnalytics = ({
               <DynamicBarChart
                 width={350}
                 height={350}
-                data={getHighestAverageOutputUser(data)}
+                data={getHighestAverageOutputUser(chartData)}
                 margin={{
                   top: 30,
                   right: 30,
@@ -245,7 +319,7 @@ const ProjectAnalytics = ({
                   name="Throughput"
                   activeIndex={activeIndex}
                   activeShape={renderActiveShape}
-                  data={getHighestAverageOutputUser(data)}
+                  data={getHighestAverageOutputUser(chartData)}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -294,7 +368,7 @@ const ProjectAnalytics = ({
                 fill="#8884d8"
                 dataKey="value"
               >
-                {data.map((entry, index) => (
+                {chartData.map((_, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={COLORS[index % COLORS.length]}
@@ -304,7 +378,7 @@ const ProjectAnalytics = ({
               <Legend
                 payload={[
                   {
-                    value: 'User total output / input',
+                    value: 'Your total output / input',
                     color: '#8884d8',
                     type: 'rect'
                   }

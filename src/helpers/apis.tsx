@@ -73,8 +73,32 @@ export const getMe = async () => {
   }
 }
 
+const countInput = (file: File): Promise<number> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (event: ProgressEvent<FileReader>) => {
+      const fileContent = (event.target?.result as string) || ''
+      const lineCount = fileContent.split('\n').length - 1 // Subtract 1 to exclude last empty line
+      resolve(lineCount)
+    }
+    reader.onerror = () => {
+      reject(new Error('Failed to read the file.'))
+    }
+    reader.readAsText(file)
+  })
+}
+
 export const createProject = async (data: FormData) => {
   try {
+    const file = data.get('inputFile') // Assuming your file input field is named 'file'
+    if (!file || !(file instanceof File)) {
+      throw new Error('Invalid file input')
+    }
+
+    const inputCount = await countInput(file)
+    console.log('Number of lines in the file:', inputCount)
+
+    data.append('inputCount', inputCount.toString())
     const response = await axios.post('/projects', data, {
       headers: {
         'Content-Type': 'multipart/form-data'

@@ -241,7 +241,7 @@ export interface chartData {
   timestamp: number
 }
 
-export const getChartData = (data: any) => {
+export const getChartData = (data: any, numberOfOutputData: any) => {
   const expectedData: chartData[] = []
 
   data.reduce(
@@ -255,10 +255,16 @@ export const getChartData = (data: any) => {
       }[],
       obj: { contribution: any[]; timestamp: number }
     ) => {
+      let tmpTotalOutput = 0
       obj.contribution.forEach((contribution) => {
+        numberOfOutputData.forEach((outputData: any) => {
+          if (contribution.userId === outputData.userId) {
+            tmpTotalOutput = outputData.numberOfOutput
+          }
+        })
         const newObj = {
           userId: contribution.userId,
-          totalOutput: contribution.totalOutput,
+          totalOutput: tmpTotalOutput,
           userName: contribution.userName,
           average: contribution.throughputStats.average,
           timestamp: obj.timestamp
