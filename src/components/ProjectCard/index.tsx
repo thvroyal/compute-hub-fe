@@ -21,6 +21,7 @@ interface ProjectCardProps {
   image?: string
   categories?: string[]
   info?: React.ReactNode[]
+  compact?: boolean
 }
 const ProjectCard = ({
   name,
@@ -28,7 +29,8 @@ const ProjectCard = ({
   id,
   image,
   categories,
-  info
+  info,
+  compact = false
 }: ProjectCardProps) => {
   const router = useRouter()
   const handleClick = () => {
@@ -45,7 +47,7 @@ const ProjectCard = ({
       overflow="hidden"
     >
       {/* Header card */}
-      {image && (
+      {!compact && image && (
         <Image
           src={image}
           objectFit="cover"
@@ -57,22 +59,38 @@ const ProjectCard = ({
       <Flex
         width="min(100%, 935px)"
         direction="column"
-        padding="24px 32px 10px 32px"
+        padding={!compact ? '24px 32px 10px 32px' : '16px 24px 16px 24px'}
       >
         {/* Body card */}
         <VStack spacing="10px" align="flex-start">
-          <HStack spacing="16px" pb="16px">
-            <BoxIcon w="24px" h="24px" color="gray.500" />
+          <HStack spacing="16px" pb={!compact ? '16px' : '0px'}>
+            {!compact && <BoxIcon w="24px" h="24px" color="gray.500" />}
             <Link as={NextLink} href={`/projects/${id}`}>
-              <Heading variant="lg" color="blue.800">
-                {name}
-              </Heading>
+              {compact ? (
+                <Text
+                  fontSize="xl"
+                  fontWeight="semibold"
+                  lineHeight={6}
+                  color="blue.800"
+                >
+                  {name}
+                </Text>
+              ) : (
+                <Heading variant="lg" color="blue.800">
+                  {name}
+                </Heading>
+              )}
             </Link>
           </HStack>
-          <Text fontSize="md" lineHeight={6} color="gray.500">
+          <Text
+            fontSize="md"
+            lineHeight={6}
+            color="gray.500"
+            noOfLines={!compact ? 4 : 2}
+          >
             {description}
           </Text>
-          <HStack spacing="10px" py="16px">
+          <HStack spacing="10px" py={!compact ? '16px' : '8px'}>
             {categories?.map((category, index) => (
               <Tag
                 key={`${category}${index}`}
@@ -87,25 +105,27 @@ const ProjectCard = ({
         </VStack>
       </Flex>
       {/* Footer card */}
-      <Flex
-        bgColor="blackAlpha.50"
-        w="full"
-        p="16px 32px"
-        borderTop="1px solid"
-        borderColor="blackAlpha.200"
-        align="center"
-      >
-        <HStack spacing="42px">{info?.map((item) => item)}</HStack>
-        <Spacer />
-        <Button
-          size="xs"
-          variant="solid"
-          bgColor="blackAlpha.200"
-          onClick={handleClick}
+      {!compact && (
+        <Flex
+          bgColor="blackAlpha.50"
+          w="full"
+          p="16px 32px"
+          borderTop="1px solid"
+          borderColor="blackAlpha.200"
+          align="center"
         >
-          Join to project
-        </Button>
-      </Flex>
+          <HStack spacing="42px">{info?.map((item) => item)}</HStack>
+          <Spacer />
+          <Button
+            size="xs"
+            variant="solid"
+            bgColor="blackAlpha.200"
+            onClick={handleClick}
+          >
+            Join to project
+          </Button>
+        </Flex>
+      )}
     </VStack>
   )
 }

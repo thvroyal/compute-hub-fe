@@ -121,8 +121,9 @@ const Header = () => {
                     </MenuButton>
                     <Portal>
                       <MenuList>
-                        <MenuItem>Profile</MenuItem>
-                        <MenuItem>Activities </MenuItem>
+                        <MenuItem onClick={() => router.push('/profile')}>
+                          Profile
+                        </MenuItem>
                         <MenuDivider />
                         <MenuItem onClick={handleLogOut}>Logout</MenuItem>
                       </MenuList>
@@ -186,8 +187,12 @@ const Header = () => {
                       )}
                       {status === 'authenticated' && (
                         <>
-                          <Button variant="ghost">Profile</Button>
-                          <Button variant="ghost">Activities</Button>
+                          <Button
+                            variant="ghost"
+                            onClick={() => router.push('/profile')}
+                          >
+                            Profile
+                          </Button>
                         </>
                       )}
                     </VStack>
