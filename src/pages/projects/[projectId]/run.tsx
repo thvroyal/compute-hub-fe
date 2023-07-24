@@ -4,7 +4,8 @@ import DataWithLabel from 'components/DataWithLabel'
 import { DotIcon, LoadingIcon } from 'components/Icons'
 import { Author } from 'components/ProjectCard/States'
 import Logs, { LogsProps } from 'components/Table/Logs'
-import { getProjectById } from 'helpers/apis'
+import { getProjectById, getProjectReport } from 'helpers/apis'
+import { getNumberOfOutputByUserId } from 'helpers/compute'
 import { getPresignedUrl } from 'libs/aws'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import Script from 'next/script'
@@ -41,7 +42,7 @@ const statusColor = {
 const MAX_SCRIPTS = 2
 
 const initialStatus: ReportStatus = {
-  totalItems: 0,
+  totalOutput: 0,
   cpuTime: 0,
   dataTransferTime: 0,
   nbItems: 0,
@@ -92,9 +93,35 @@ const RunProject = ({
   const [submitState, setSubmitState] = useState(false)
   const socketRef = useRef<WebSocket | null>(null)
   const { data: session } = useSession()
+  const { bucketId } = project
 
   const userId = session?.user.id
   const userName = session?.user.name
+
+  // useEffect(() => {
+  //   console.log(reportStatus)
+  // }, [reportStatus])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await getProjectReport(bucketId)
+        console.log(userId)
+        const contributedItems = getNumberOfOutputByUserId(
+          response.data.projectReport.totalOutput,
+          userId
+        )
+        setReportStatus((prevStats) => ({
+          ...prevStats,
+          totalOutput: contributedItems
+        }))
+      } catch (e) {
+        console.error('Fetch error', e)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   const url =
     environment === 'production'
@@ -223,7 +250,7 @@ const RunProject = ({
   const report = (deltaTime: number) => {
     setReportStatus((prevStatus) => ({
       ...prevStatus,
-      totalItems: prevStatus.totalItems + 1,
+      totalOutput: prevStatus.totalOutput + 1,
       nbItems: prevStatus.nbItems + 1,
       cpuTime: prevStatus.cpuTime + deltaTime,
       dataTransferTime: prevStatus.dataTransferTime + 0
@@ -364,7 +391,8 @@ export const getServerSideProps: GetServerSideProps<{
     name: string
     port: string
     host: string
-  } | null
+    bucketId: string
+  }
 }> = async (context) => {
   const { projectId = '' } = context.params || {}
   const { data } = await getProjectById(projectId.toString())
