@@ -39,7 +39,7 @@ export const UnprocessedUnit = ({
           color="green.500"
           fontWeight="medium"
         >
-          {`(${percent}%)`}
+          {`(${percent.toFixed(2)}%)`}
         </Text>
       </HStack>
     </HStack>

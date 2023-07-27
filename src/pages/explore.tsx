@@ -31,16 +31,16 @@ const Explore = (
               categories={project.categories}
               info={[
                 <Author
-                  name="thvroyal"
-                  avatarSrc="https://avatars.githubusercontent.com/u/44036562?v=4"
+                  name={project.author?.name || 'unknown'}
+                  avatarSrc={project.author?.image || ''}
                   key="author"
                 />,
                 <UnprocessedUnit
                   key="unprocessed"
-                  currentValue={6000}
-                  total={10000}
-                />,
-                <Joined key="joined" joined={96} />
+                  currentValue={project.computeInfo?.totalOutput || 0}
+                  total={project.computeInfo?.totalInput || 0}
+                />
+                // <Joined key="joined" joined={96} />
               ]}
             />
           ))}

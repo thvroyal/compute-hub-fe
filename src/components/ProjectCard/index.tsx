@@ -90,20 +90,18 @@ const ProjectCard = ({
           >
             {description}
           </Text>
-          {!compact && (
-            <HStack spacing="10px" py={!compact ? '16px' : '8px'}>
-              {categories?.map((category, index) => (
-                <Tag
-                  key={`${category}${index}`}
-                  size="md"
-                  variant="subtle"
-                  colorScheme="blue"
-                >
-                  {category}
-                </Tag>
-              ))}
-            </HStack>
-          )}
+          <HStack spacing="10px" py={!compact ? '16px' : '8px'}>
+            {categories?.map((category, index) => (
+              <Tag
+                key={`${category}${index}`}
+                size={!compact ? 'md' : 'sm'}
+                variant="subtle"
+                colorScheme="blue"
+              >
+                {category}
+              </Tag>
+            ))}
+          </HStack>
         </VStack>
       </Flex>
       {/* Footer card */}
