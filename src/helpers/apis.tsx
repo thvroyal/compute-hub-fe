@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios'
+import axios, { AxiosError, AxiosRequestConfig } from 'axios'
 
 axios.defaults.baseURL = process.env.NEXT_PUBLIC_BASE_URL
 axios.defaults.withCredentials = true
@@ -164,6 +164,19 @@ export const getProjectReport = async (bucketId: string) => {
         bucketId: bucketId
       }
     })
+    return { data: response.data, error: null }
+  } catch (error) {
+    const baseError = error as AxiosError<{ message: string }>
+    return {
+      error: baseError.response?.data.message || baseError.message,
+      data: null
+    }
+  }
+}
+
+export const getProjectsByUser = async (options?: AxiosRequestConfig) => {
+  try {
+    const response = await axios.get(`/users/projects`, options)
     return { data: response.data, error: null }
   } catch (error) {
     const baseError = error as AxiosError<{ message: string }>

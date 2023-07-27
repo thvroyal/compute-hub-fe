@@ -11,9 +11,15 @@ import {
 } from '@chakra-ui/react'
 import Container from 'components/Container'
 import ProjectCard from 'components/ProjectCard'
-import { useSession } from 'next-auth/react'
+import { getProjectsByUser } from 'helpers/apis'
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
+import { getSession, useSession } from 'next-auth/react'
+import { Project } from 'types/Project'
+import { getCookiesFromSession } from 'utils/formatData'
 
-export default function Profile() {
+export default function Profile({
+  projects
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const { data: session } = useSession()
 
   return (
@@ -60,53 +66,47 @@ export default function Profile() {
               <Heading as="h4" size="xs" color="gray.600">
                 Published project
               </Heading>
-              <Flex flexWrap="wrap" gap="16px">
-                <Box as="div" w={{ base: '100%', md: 'calc(50% - 8px)' }}>
-                  <ProjectCard
-                    name="Test Project"
-                    id="123456"
-                    description="Amicable Numbers is an independent research project that uses Internet-connected computers to find new amicable pairs. You can contribute to our research by running a free program on your computer."
-                    categories={['text']}
-                    compact
-                  />
-                </Box>
-                <Box as="div" w={{ base: '100%', md: 'calc(50% - 8px)' }}>
-                  <ProjectCard
-                    name="Test Project"
-                    id="123456"
-                    description="Hello"
-                    categories={['text']}
-                    compact
-                  />
-                </Box>
-                <Box as="div" w={{ base: '100%', md: 'calc(50% - 8px)' }}>
-                  <ProjectCard
-                    name="Test Project"
-                    id="123456"
-                    description="Hello"
-                    categories={['text']}
-                    compact
-                  />
-                </Box>
-                <Box as="div" w={{ base: '100%', md: 'calc(50% - 8px)' }}>
-                  <ProjectCard
-                    name="Test Project"
-                    id="123456"
-                    description="Hello"
-                    categories={['text']}
-                    compact
-                  />
-                </Box>
+              <Flex flexWrap="wrap" gap="24px">
+                {projects.map(({ id, name, categories }) => (
+                  <Box
+                    as="div"
+                    w={{ base: '100%', md: 'calc(50% - 12px)' }}
+                    key={id}
+                  >
+                    <ProjectCard
+                      name={name}
+                      id={id}
+                      description="Amicable Numbers is an independent research project that uses Internet-connected computers to find new amicable pairs. You can contribute to our research by running a free program on your computer."
+                      categories={categories}
+                      compact
+                    />
+                  </Box>
+                ))}
               </Flex>
             </Flex>
-            <Flex alignItems="start">
+            {/* <Flex alignItems="start">
               <Heading as="h4" size="xs" color="gray.600">
                 Contributions
               </Heading>
-            </Flex>
+            </Flex> */}
           </VStack>
         </GridItem>
       </Grid>
     </Container>
   )
+}
+
+export const getServerSideProps: GetServerSideProps<{
+  projects: Project[]
+}> = async (ctx) => {
+  const session = await getSession(ctx)
+  const { data } = await getProjectsByUser({
+    headers: {
+      Cookie: getCookiesFromSession(session)
+    }
+  })
+
+  return {
+    props: { projects: data || [] }
+  }
 }

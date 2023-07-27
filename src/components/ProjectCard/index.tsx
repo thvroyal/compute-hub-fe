@@ -40,7 +40,7 @@ const ProjectCard = ({
   return (
     <VStack
       spacing="0"
-      bgColor="gray.50"
+      bgColor={!compact ? 'gray.50' : 'white'}
       borderRadius="2xl"
       border="1px solid"
       borderColor="blackAlpha.200"
@@ -90,18 +90,20 @@ const ProjectCard = ({
           >
             {description}
           </Text>
-          <HStack spacing="10px" py={!compact ? '16px' : '8px'}>
-            {categories?.map((category, index) => (
-              <Tag
-                key={`${category}${index}`}
-                size="md"
-                variant="subtle"
-                colorScheme="blue"
-              >
-                {category}
-              </Tag>
-            ))}
-          </HStack>
+          {!compact && (
+            <HStack spacing="10px" py={!compact ? '16px' : '8px'}>
+              {categories?.map((category, index) => (
+                <Tag
+                  key={`${category}${index}`}
+                  size="md"
+                  variant="subtle"
+                  colorScheme="blue"
+                >
+                  {category}
+                </Tag>
+              ))}
+            </HStack>
+          )}
         </VStack>
       </Flex>
       {/* Footer card */}

@@ -1,3 +1,5 @@
+import { Session } from 'next-auth'
+
 export const getSize = (size: number) => {
   if (size < 1024) {
     return `${size} B`
@@ -28,4 +30,8 @@ export const formatStopWatch = ({
   }
   value += `${seconds}s`
   return value
+}
+
+export const getCookiesFromSession = (session: Session | null) => {
+  return `accessToken=${session?.accessToken};refreshToken=${session?.refreshToken}`
 }
