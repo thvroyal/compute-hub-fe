@@ -93,7 +93,7 @@ export const calculate = (
 
   setReportStatus((prevStatus) => ({
     ...prevStatus,
-    totalOutput: prevStatus.totalOutput + reportInfo.nbItems,
+    totalOutput: prevStatus.totalOutput,
     nbItems: prevStatus.nbItems + reportInfo.nbItems,
     cpuTime: prevStatus.cpuTime + reportInfo.cpuTime,
     dataTransferTime: prevStatus.dataTransferTime + reportInfo.dataTransferTime,
@@ -332,6 +332,8 @@ export const getHighestAverageOutputUser = (data: any) => {
   // Find the two different users with highest averages
   const topUsers = sortedUsers.slice(0, 2)
   // return topUsers
+
+  console.log(topUsers)
 
   return topUsers
 }
