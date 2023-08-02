@@ -1,4 +1,4 @@
-import { Button, Flex, Heading, Text, VStack } from '@chakra-ui/react'
+import { Button, Flex, Heading, Progress, Text, VStack } from '@chakra-ui/react'
 import Container from 'components/Container'
 import DataWithLabel from 'components/DataWithLabel'
 import { DotIcon, LoadingIcon } from 'components/Icons'
@@ -302,7 +302,7 @@ const RunProject = ({
         onLoad={handleScriptLoad}
       />
       <Script src={bundleFile} onLoad={handleScriptLoad} />
-      <Container my="60px">
+      <Container my="60px" px={4} mt={{ base: 8 }}>
         <Flex flexWrap="wrap" gap="36px" w="full">
           <Flex
             w="min(100%, 500px)"
@@ -315,12 +315,11 @@ const RunProject = ({
           >
             <Heading size="lg">{project.name}</Heading>
             <Text fontSize="md" lineHeight={6} color="gray.500">
-              Amicable Numbers is an independent research project that uses
-              Internet-connected computers to find new amicable pairs
+              {project.description}
             </Text>
             <Author name={project.author.name} avatarSrc="" />
           </Flex>
-          <VStack spacing="24px" w="min(100%, 500px)">
+          <VStack spacing="24px" w="min(100%, 500px)" pl={'10px'}>
             <Flex justify="space-between" w="full">
               <DataWithLabel
                 label="Status"
@@ -362,13 +361,10 @@ const RunProject = ({
               value="http://localhost:3000/projects/6479766078ef1e038b8a0097"
             />
             <Flex justify="space-between" w="full">
-              <DataWithLabel
-                label="Throughput"
-                value={reportStatus.throughput}
-              />
+              <DataWithLabel label="OPS" value={reportStatus.throughput} />
               <DataWithLabel label="CPU Usage" value={reportStatus.cpuUsage} />
               <DataWithLabel
-                label="My total output"
+                label="My output"
                 value={reportStatus.totalOutput}
               />
             </Flex>
@@ -385,7 +381,12 @@ const RunProject = ({
             </Button>
           )}
         </Flex>
-        <VStack spacing="24px" w="full" mt="60px" align="start">
+        <VStack
+          spacing="24px"
+          w="full"
+          mt="60px"
+          align={{ base: 'center', md: 'start' }}
+        >
           <Heading size="md">Computing Logs</Heading>
           <Logs data={logs} tableContainerProps={{ maxH: '500px' }} />
         </VStack>
@@ -400,6 +401,7 @@ export const getServerSideProps: GetServerSideProps<{
   bundleFile: string | undefined
   environment: 'production' | 'development'
   project: {
+    description: string
     name: string
     port: string
     host: string

@@ -36,6 +36,7 @@ const DataWithLabel = ({
             color="gray.900"
             fontWeight="medium"
             w="full"
+            wordBreak="break-word"
             {...valueProps}
           >
             {value}

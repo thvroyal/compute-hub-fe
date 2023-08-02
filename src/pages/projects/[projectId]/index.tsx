@@ -165,7 +165,7 @@ const DetailProject = (
               objectPosition="center"
             />
           </Box>
-          <Box pl={3}>
+          <Box pl={3} pb={5}>
             <div dangerouslySetInnerHTML={{ __html: contentHtml }} />
           </Box>
         </GridItem>
