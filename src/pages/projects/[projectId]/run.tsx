@@ -98,10 +98,6 @@ const RunProject = ({
   const userId = session?.user.id
   const userName = session?.user.name
 
-  // useEffect(() => {
-  //   console.log(reportStatus)
-  // }, [reportStatus])
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -126,7 +122,7 @@ const RunProject = ({
   const url =
     environment === 'production'
       ? `ws://${project?.host.replace('\n', '')}:${project?.port}`
-      : `ws://localhost:${project?.port}`
+      : `ws://192.168.1.18:${project?.port}`
 
   let processor: any = null
   let connectTimeout: any
@@ -219,8 +215,10 @@ const RunProject = ({
       userName: userName,
       ...sendData
     }
-    if (socketRef.current) {
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify(reportData))
+    } else {
+      console.log('WebSocket connection is not open.')
     }
   }
 
@@ -233,27 +231,23 @@ const RunProject = ({
     }))
   }, [submitState])
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setReportStatus((prevStatus) => {
-        const updatedStatus = { ...prevStatus }
-        calculate(updatedStatus, setReportStatus)
-        submit(updatedStatus)
-        return updatedStatus
-      })
-      setSubmitState((prevState) => !prevState)
-    }, 3002)
+  const [intervalId, setIntervalId] = useState<null | NodeJS.Timeout>(null)
 
-    return () => clearInterval(interval)
-  }, [submitState])
+  useEffect(() => {
+    // Clean up the interval when the component unmounts
+    return () => {
+      if (intervalId !== null) {
+        clearInterval(intervalId)
+      }
+    }
+  }, [intervalId])
 
   const report = (deltaTime: number) => {
     setReportStatus((prevStatus) => ({
       ...prevStatus,
       totalOutput: prevStatus.totalOutput + 1,
       nbItems: prevStatus.nbItems + 1,
-      cpuTime: prevStatus.cpuTime + deltaTime,
-      dataTransferTime: prevStatus.dataTransferTime + 0
+      cpuTime: prevStatus.cpuTime + deltaTime
     }))
   }
 
@@ -261,6 +255,19 @@ const RunProject = ({
     if (numOfScriptLoaded === MAX_SCRIPTS) {
       if (status !== Status.RUNNING) {
         start()
+        // Start the interval when the button is clicked
+        if (intervalId === null) {
+          const newIntervalId = setInterval(() => {
+            setReportStatus((prevStatus) => {
+              const updatedStatus = { ...prevStatus }
+              calculate(updatedStatus, setReportStatus)
+              submit(updatedStatus)
+              return updatedStatus
+            })
+            setSubmitState((prevState) => !prevState)
+          }, 3002)
+          setIntervalId(newIntervalId)
+        }
       } else if (processor) {
         processor.terminate()
         setStatus(Status.DISCONNECTED)
@@ -283,6 +290,11 @@ const RunProject = ({
   const starting = status === Status.RUNNING
   const timer = formatStopWatch({ seconds, minutes, hours })
 
+  useEffect(() => {
+    const { throughput, throughputs } = reportStatus
+    console.log(throughput, throughputs)
+  }, [reportStatus])
+
   return (
     <>
       <Script
@@ -301,12 +313,12 @@ const RunProject = ({
             borderRadius="16px"
             borderColor="gray.200"
           >
-            <Heading size="lg">Amicable Numbers</Heading>
+            <Heading size="lg">{project.name}</Heading>
             <Text fontSize="md" lineHeight={6} color="gray.500">
               Amicable Numbers is an independent research project that uses
               Internet-connected computers to find new amicable pairs
             </Text>
-            <Author name="thvroyal" avatarSrc="" />
+            <Author name={project.author.name} avatarSrc="" />
           </Flex>
           <VStack spacing="24px" w="min(100%, 500px)">
             <Flex justify="space-between" w="full">
@@ -356,8 +368,8 @@ const RunProject = ({
               />
               <DataWithLabel label="CPU Usage" value={reportStatus.cpuUsage} />
               <DataWithLabel
-                label="Data TransferLoad"
-                value={reportStatus.dataTransferLoad}
+                label="My total output"
+                value={reportStatus.totalOutput}
               />
             </Flex>
           </VStack>
@@ -392,6 +404,7 @@ export const getServerSideProps: GetServerSideProps<{
     port: string
     host: string
     bucketId: string
+    author: any
   }
 }> = async (context) => {
   const { projectId = '' } = context.params || {}

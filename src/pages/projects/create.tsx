@@ -21,6 +21,7 @@ import { useRouter } from 'next/router'
 interface FormValues {
   name: string
   categories: string
+  description: string
   inputFile: FileList
   sourceFile: FileList
 }
@@ -34,6 +35,7 @@ const CreateProject = () => {
     const formData = new FormData()
     formData.append('name', values.name)
     formData.append('categories', values.categories)
+    formData.append('description', values.description)
     formData.append('inputFile', values.inputFile[0])
     formData.append('sourceFile', values.sourceFile[0])
     setLoading(true)
@@ -64,12 +66,12 @@ const CreateProject = () => {
       >
         <VStack spacing="8px" align="flex-start">
           <HStack spacing="10px">
-            <BoxIcon w={8} h={8} color="gray.700" />
+            <BoxIcon w={8} h={8} color="blue.700" />
             <Text
-              fontSize="4xl"
+              fontSize={{ md: '4xl', base: '2xl' }}
               lineHeight="10"
               fontWeight="semibold"
-              color="gray.800"
+              color="blue.700"
             >
               Create a new project
             </Text>
@@ -84,7 +86,7 @@ const CreateProject = () => {
         <form onSubmit={onSubmit} encType="multipart/form-data">
           <VStack spacing="32px">
             <FormControl isRequired>
-              <FormLabel>Project Name</FormLabel>
+              <FormLabel color={'blue.600'}>Project Name</FormLabel>
               <Input
                 id="name"
                 placeholder="Project name"
@@ -94,8 +96,8 @@ const CreateProject = () => {
                 })}
               />
             </FormControl>
-            <FormControl>
-              <FormLabel>Categories</FormLabel>
+            <FormControl isRequired>
+              <FormLabel color={'blue.600'}>Categories</FormLabel>
               <Input
                 id="categories"
                 placeholder="ex: javascript, game, people, ..."
@@ -105,15 +107,33 @@ const CreateProject = () => {
                 Each tag will separate by a comma.
               </FormHelperText>
             </FormControl>
+
+            <FormControl isRequired>
+              <FormLabel color={'blue.600'}>Description</FormLabel>
+              <Input
+                as="textarea"
+                id="description"
+                placeholder={`You can use Markdown syntax to format your text.
+                
+Briefly describe the main goal or purpose of the project
+
+Explain the unique selling points of the project and how it stands out from other similar projects`}
+                h="min(200px)"
+                padding={'10px'}
+                {...register('description', {
+                  required: 'This is required'
+                })}
+              />
+            </FormControl>
             <FormControl>
-              <FormLabel>Input Values</FormLabel>
+              <FormLabel color={'blue.600'}>Input Values</FormLabel>
               <Upload
                 register={register('inputFile')}
                 value={watch('inputFile')}
               />
             </FormControl>
             <FormControl>
-              <FormLabel>Main Function</FormLabel>
+              <FormLabel color={'blue.600'}>Main Function</FormLabel>
               <Upload
                 register={register('sourceFile')}
                 value={watch('sourceFile')}

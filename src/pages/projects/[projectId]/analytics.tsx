@@ -29,6 +29,7 @@ import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { getProjectById } from 'helpers/apis'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
+import { type } from 'os'
 
 const DynamicBarChart = dynamic(
   () => import('recharts').then((module) => module.BarChart),
@@ -64,10 +65,6 @@ const ProjectAnalytics = ({
   const userName = session?.user.name
 
   useEffect(() => {
-    console.log(totalOutput)
-  }, [totalOutput])
-
-  useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await getProjectReport(bucketId)
@@ -91,10 +88,18 @@ const ProjectAnalytics = ({
               },
               { outputs: 0, numberOfUsers: 0 }
             )
-          const onlineUsers =
+
+          const lastestContribution =
             response.data.projectReport.contributions[
               response.data.projectReport.contributions.length - 1
-            ].contribution.length
+            ]
+
+          let onlineUsers = 0
+          if (Date.now() - lastestContribution.timestamp < 4000) {
+            onlineUsers = lastestContribution.contribution.length
+          } else {
+            onlineUsers = 0
+          }
 
           return { outputs, numberOfUsers, online: onlineUsers }
         })
@@ -269,7 +274,7 @@ const ProjectAnalytics = ({
               <DynamicBarChart
                 width={350}
                 height={350}
-                data={getHighestAverageOutputUser(chartData)}
+                data={getHighestAverageOutputUser(chartData, userId)}
                 margin={{
                   top: 30,
                   right: 30,
@@ -285,10 +290,18 @@ const ProjectAnalytics = ({
                 />
                 <YAxis />
                 <Tooltip />
-                <Legend />
+                <Legend
+                  payload={[
+                    {
+                      value: 'Highest average contributions',
+                      color: '#8884d8',
+                      type: 'triangle'
+                    }
+                  ]}
+                />
                 <CartesianGrid strokeDasharray="3 3" />
                 <Bar
-                  name="Highest average output users"
+                  name="Output per second"
                   dataKey="average"
                   fill="#8884d8"
                   background={{ fill: '#eee' }}
@@ -319,7 +332,7 @@ const ProjectAnalytics = ({
                   name="Throughput"
                   activeIndex={activeIndex}
                   activeShape={renderActiveShape}
-                  data={getHighestAverageOutputUser(chartData)}
+                  data={getHighestAverageOutputUser(chartData, userId)}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -333,8 +346,9 @@ const ProjectAnalytics = ({
                     {
                       value: 'Relative average output',
                       color: '#8884d8',
-                      type: 'rect'
+                      type: 'triangle'
                     }
+                    // 'line' | 'plainline' | 'square' | 'rect' | 'circle' | 'cross' | 'diamond' | 'star' | 'triangle' | 'wye'
                   ]}
                   height={55}
                 />
@@ -378,9 +392,9 @@ const ProjectAnalytics = ({
               <Legend
                 payload={[
                   {
-                    value: 'Your total output / input',
+                    value: 'Your total output',
                     color: '#8884d8',
-                    type: 'rect'
+                    type: 'triangle'
                   }
                 ]}
                 height={55}

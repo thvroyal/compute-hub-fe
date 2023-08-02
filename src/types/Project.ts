@@ -3,6 +3,8 @@ export interface Project {
   folder: string
   name: string
   categories: string[]
+  description: string
+  createdAt: string
   author?: {
     id: string
     name: string

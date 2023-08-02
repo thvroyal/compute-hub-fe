@@ -169,7 +169,7 @@ export const renderActiveShape = (props: any) => {
         outerRadius={outerRadius}
         startAngle={startAngle}
         endAngle={endAngle}
-        fill={fill}
+        fill={payload.userName === 'You' ? '#82ca9d' : '#8884d8'}
       />
       <Sector
         cx={cx}
@@ -178,14 +178,20 @@ export const renderActiveShape = (props: any) => {
         endAngle={endAngle}
         innerRadius={outerRadius + 6}
         outerRadius={outerRadius + 10}
-        fill={fill}
+        fill={payload.userName === 'You' ? '#82ca9d' : '#8884d8'}
       />
       <path
         d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`}
-        stroke={fill}
+        stroke={payload.userName === 'You' ? '#82ca9d' : '#8884d8'}
         fill="none"
       />
-      <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
+      <circle
+        cx={ex}
+        cy={ey}
+        r={2}
+        fill={payload.userName === 'You' ? '#82ca9d' : '#8884d8'}
+        stroke="none"
+      />
       <text
         x={ex + (cos >= 0 ? 1 : -1) * 12}
         y={ey}
@@ -301,7 +307,10 @@ export const getHistoricalData = (data: any) => {
   return result
 }
 
-export const getHighestAverageOutputUser = (data: any) => {
+export const getHighestAverageOutputUser = (
+  data: any,
+  user: string | undefined
+) => {
   // Group the data by user and calculate average for each user
   const userAverages = data.reduce(
     (
@@ -319,6 +328,10 @@ export const getHighestAverageOutputUser = (data: any) => {
           userName: obj.userName,
           average: obj.average
         }
+
+        if (user === obj.userId) {
+          accumulator[obj.userId].userName = 'You'
+        }
       }
       return accumulator
     },
@@ -330,7 +343,7 @@ export const getHighestAverageOutputUser = (data: any) => {
     (a: any, b: any) => b.average - a.average
   )
   // Find the two different users with highest averages
-  const topUsers = sortedUsers.slice(0, 2)
+  const topUsers = sortedUsers.slice(0, 4)
   // return topUsers
 
   console.log(topUsers)
