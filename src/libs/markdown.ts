@@ -1,23 +1,39 @@
-import fs from 'fs'
+// import fs from 'fs'
 import { remark } from 'remark'
 import html from 'remark-html'
 import matter from 'gray-matter'
 
 export async function getMarkdownFileContent(
-  fileName: string
+  url: string
 ): Promise<{ [key: string]: string; contentHtml: string }> {
-  const fileContents = fs.readFileSync(fileName, 'utf8')
+  try {
+    // Make the HTTP request using fetch
+    const response = await fetch(url)
 
-  const matterResult = matter(fileContents)
+    if (!response.ok) {
+      throw new Error('Failed to fetch the file content')
+    }
 
-  const processedContent = await remark()
-    .use(html)
-    .process(matterResult.content)
+    // Read the response body as text
+    const data = await response.text()
 
-  const contentHtml = processedContent.toString()
+    // Parse the downloaded file contents
+    const matterResult = matter(data)
 
-  return {
-    contentHtml,
-    ...matterResult.data
+    // Process the content with the 'remark' and 'html' plugins
+    const processedContent = await remark()
+      .use(html)
+      .process(matterResult.content)
+
+    const contentHtml = processedContent.toString()
+
+    return {
+      contentHtml,
+      ...matterResult.data
+    }
+  } catch (error) {
+    // Handle any errors that occur during the fetch operation
+    console.error('Error fetching file content:', error)
+    throw error
   }
 }

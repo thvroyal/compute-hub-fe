@@ -15,10 +15,10 @@ import {
 import Container from 'components/Container'
 import { ThreeDotIcon } from 'components/Icons'
 import { getProjectById, getProjects } from 'helpers/apis'
+import { getPresignedUrl } from 'libs/aws'
 import { getMarkdownFileContent } from 'libs/markdown'
 import { GetStaticProps, InferGetStaticPropsType } from 'next'
 import { useRouter } from 'next/router'
-import path from 'path'
 import { useState } from 'react'
 import { Project } from 'types/Project'
 
@@ -27,7 +27,7 @@ const DetailProject = (
 ) => {
   const router = useRouter()
   const { descriptionMarkdown, project } = props
-  const { name, description, computeInfo, author, createdAt, status } =
+  const { name, computeInfo, author, createdAt, status, description } =
     project || {}
   const { contentHtml } = descriptionMarkdown || {}
 
@@ -39,9 +39,14 @@ const DetailProject = (
 
   const detailData = [
     {
-      key: 'unprocessed_unit',
+      key: 'total_input',
       label: 'Total Input',
       value: computeInfo?.totalInput
+    },
+    {
+      key: 'total_output',
+      label: 'Total Output',
+      value: computeInfo?.totalOutput
     },
     {
       key: 'status',
@@ -102,16 +107,16 @@ const DetailProject = (
               </Heading>
               <IconButton aria-label="more options" icon={<ThreeDotIcon />} />
             </Flex>
-            <Text color="gray.500" fontSize="md" lineHeight={6}>
-              {showFullDescription
-                ? project.description
-                : project.description.slice(0, 160)}
-              {project.description.length > 160 && (
-                <Link color="blue.500" onClick={toggleDescription}>
-                  {showFullDescription ? '' : 'Read More'}
-                </Link>
-              )}
-            </Text>
+            {description && (
+              <Text color="gray.500" fontSize="md" lineHeight={6}>
+                {showFullDescription ? description : description.slice(0, 160)}
+                {description.length > 160 && (
+                  <Link color="blue.500" onClick={toggleDescription}>
+                    {showFullDescription ? '' : 'Read More'}
+                  </Link>
+                )}
+              </Text>
+            )}
             {/* Stats of project */}
             <VStack w="full" spacing="0">
               {detailData.map((item) => {
@@ -219,8 +224,14 @@ export const getStaticProps: GetStaticProps<{
 }> = async (context) => {
   const { projectId } = context.params || {}
   const { data } = await getProjectById(projectId as string)
-  const filename = path.join(process.cwd(), 'README.md')
-  const descriptionMarkdown = await getMarkdownFileContent(filename)
+  const filename = data
+    ? await getPresignedUrl(`${data.bucketId}/README.md`)
+    : ''
+
+  let descriptionMarkdown = { contentHtml: '' }
+  if (filename) {
+    descriptionMarkdown = await getMarkdownFileContent(filename)
+  }
   return {
     props: {
       descriptionMarkdown,

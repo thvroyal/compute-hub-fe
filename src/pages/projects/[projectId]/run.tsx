@@ -1,5 +1,4 @@
 import {
-  Box,
   Button,
   Flex,
   Heading,
@@ -364,16 +363,18 @@ const RunProject = ({
             justifyContent="space-between"
           >
             <Heading size="lg">{project.name}</Heading>
-            <Text color="gray.500" fontSize="md" lineHeight={6}>
-              {showFullDescription
-                ? project.description
-                : project.description.slice(0, 160)}
-              {project.description.length > 160 && (
-                <Link color="blue.500" onClick={toggleDescription}>
-                  {showFullDescription ? '' : 'Read More'}
-                </Link>
-              )}
-            </Text>
+            {project.description && (
+              <Text color="gray.500" fontSize="md" lineHeight={6}>
+                {showFullDescription
+                  ? project.description
+                  : project.description.slice(0, 160)}
+                {project.description.length > 160 && (
+                  <Link color="blue.500" onClick={toggleDescription}>
+                    {showFullDescription ? '' : 'Read More'}
+                  </Link>
+                )}
+              </Text>
+            )}
             <Author name={project.author.name} avatarSrc="" />
           </Flex>
           <VStack

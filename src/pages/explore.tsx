@@ -1,7 +1,7 @@
 import { Flex, Text } from '@chakra-ui/layout'
 import Container from 'components/Container'
 import ProjectCard from 'components/ProjectCard'
-import { Author, Joined, UnprocessedUnit } from 'components/ProjectCard/States'
+import { Author, UnprocessedUnit } from 'components/ProjectCard/States'
 import { getProjects } from 'helpers/apis'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { Project } from 'types/Project'

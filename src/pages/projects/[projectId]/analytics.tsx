@@ -100,16 +100,20 @@ const ProjectAnalytics = ({
               { outputs: 0, numberOfUsers: 0 }
             )
 
-          const lastestContribution =
+          const latestContribution =
             response.data.projectReport.contributions[
               response.data.projectReport.contributions.length - 1
             ]
 
           let onlineUsers = 0
-          if (Date.now() - Date.parse(lastestContribution.timestamp) < 4000) {
-            onlineUsers = lastestContribution.contribution.length
-          } else {
-            onlineUsers = 0
+          try {
+            if (Date.now() - Date.parse(latestContribution.timestamp) < 4000) {
+              onlineUsers = latestContribution.contribution.length
+            } else {
+              onlineUsers = 0
+            }
+          } catch (e) {
+            console.log(e)
           }
 
           return { outputs, numberOfUsers, online: onlineUsers }
