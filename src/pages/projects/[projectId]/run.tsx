@@ -5,11 +5,12 @@ import {
   Icon,
   Link,
   Text,
-  VStack
+  VStack,
+  useToast
 } from '@chakra-ui/react'
 import Container from 'components/Container'
 import DataWithLabel from 'components/DataWithLabel'
-import { DotIcon, LoadingIcon } from 'components/Icons'
+import { LoadingIcon } from 'components/Icons'
 import { Author } from 'components/ProjectCard/States'
 import Logs, { LogsProps } from 'components/Table/Logs'
 import { getProjectById, getProjectReport } from 'helpers/apis'
@@ -115,6 +116,7 @@ const RunProject = ({
 
   const userId = session?.user.id
   const userName = session?.user.name
+  const toast = useToast()
 
   const toggleDescription = () => {
     setShowFullDescription((prev) => !prev)
@@ -144,7 +146,7 @@ const RunProject = ({
   const url =
     environment === 'production'
       ? `ws://${project?.host.replace('\n', '')}:${project?.port}`
-      : `ws://192.168.8.133:${project?.port}`
+      : `ws://localhost:${project?.port}`
 
   let processor: any = null
   let connectTimeout: any
@@ -290,11 +292,12 @@ const RunProject = ({
           }, 3002)
           setIntervalId(newIntervalId)
         }
-      } else if (processor) {
-        processor.terminate()
-        setStatus(Status.DISCONNECTED)
-        pause()
-        processor = null
+      } else {
+        window.location.reload()
+        // processor.terminate()
+        // setStatus(Status.DISCONNECTED)
+        // pause()
+        // processor = null
       }
     }
   }
@@ -319,7 +322,7 @@ const RunProject = ({
 
   const handleCopyToClipboard = () => {
     const textarea = document.createElement('textarea')
-    textarea.value = window.location.href.split('/run')[0]
+    textarea.value = 'http://localhost:3000/projects/' + project.projectId
     document.body.appendChild(textarea)
     textarea.select()
 
@@ -327,6 +330,13 @@ const RunProject = ({
       const successful = document.execCommand('copy')
       if (successful) {
         console.log('Text copied to clipboard!')
+        toast({
+          title: 'Copied to clipboard',
+          description: 'Project link copied to clipboard',
+          status: 'success',
+          duration: 1000,
+          isClosable: false
+        })
       } else {
         console.error('Copying text to clipboard failed.')
       }
@@ -388,18 +398,6 @@ const RunProject = ({
                 label="Status"
                 value={status}
                 valueProps={{ color: statusColor[status] }}
-                leftAdornment={
-                  <DotIcon
-                    w="17.5px"
-                    h="17.5px"
-                    color={statusColor[status]}
-                    animation={
-                      status === Status.RUNNING
-                        ? `${animations.flash} 1s infinite linear reverse`
-                        : ''
-                    }
-                  />
-                }
               />
 
               <DataWithLabel
@@ -436,7 +434,7 @@ const RunProject = ({
                 border={true}
                 icon={<Icon as={FcLink} w={'20px'} h={'20px'} />}
                 label="Url - Click to copy"
-                value={window.location.href.split('/run')[0]}
+                value={'http://localhost:3000/projects/' + project.projectId}
               />
             </Flex>
 
@@ -444,7 +442,7 @@ const RunProject = ({
               <DataWithLabel
                 icon={<Icon as={FcSynchronize} w={'20px'} h={'20px'} />}
                 label="OPS"
-                value={reportStatus.throughput}
+                value={reportStatus.throughput.toFixed(5)}
               />
               <DataWithLabel
                 icon={<Icon as={FcElectronics} w={'20px'} h={'20px'} />}
@@ -497,6 +495,7 @@ export const getServerSideProps: GetServerSideProps<{
     port: string
     host: string
     bucketId: string
+    projectId: string
     author: any
   }
 }> = async (context) => {
@@ -508,7 +507,7 @@ export const getServerSideProps: GetServerSideProps<{
   return {
     props: {
       bundleFile,
-      project: data,
+      project: { ...data, projectId: projectId },
       environment:
         process.env.NODE_ENV === 'production' ? 'production' : 'development'
     }

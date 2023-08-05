@@ -55,7 +55,7 @@ const DataWithLabel = ({
           customComponent
         ) : (
           <HStack spacing="8px">
-            {isMd && label !== 'Status' && (
+            {isMd && (
               <Icon as={FcInfo} w="24px" h="24px" visibility={'hidden'} />
             )}
             {leftAdornment}

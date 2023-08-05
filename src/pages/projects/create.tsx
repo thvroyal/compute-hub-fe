@@ -62,23 +62,23 @@ const CreateProject = () => {
     <Container pb="36px">
       <Flex
         w="min(935px, 100%)"
-        mt="64px"
+        mt={{ md: '64px', base: '24px' }}
         direction="column"
         style={{ gap: '32px' }}
       >
         <VStack spacing="8px" align="flex-start">
-          <HStack spacing="10px">
-            <BoxIcon w={8} h={8} color="blue.700" />
+          <HStack spacing="10px" mb={5}>
+            <BoxIcon w={12} h={12} color="gray.700" />
             <Text
-              fontSize={{ md: '4xl', base: '2xl' }}
+              fontSize={{ md: '5xl', base: '2xl' }}
               lineHeight="10"
               fontWeight="semibold"
-              color="blue.700"
+              color="gray.700"
             >
               Create a new project
             </Text>
           </HStack>
-          <Text fontSize="text-sm" lineHeight="5" color="gray.500">
+          <Text fontSize="md" lineHeight="5" color="gray.500">
             A project contains source code, inputs and some configurations.
             Then, the project will be listed on Explore Community page.
           </Text>
@@ -90,6 +90,8 @@ const CreateProject = () => {
             <FormControl isRequired>
               <FormLabel color={'blue.600'}>Project Name</FormLabel>
               <Input
+                borderColor={'gray.300'}
+                _placeholder={{ opacity: 1, color: 'gray.400' }}
                 id="name"
                 placeholder="Project name"
                 w="min(100%, 467px)"
@@ -101,6 +103,8 @@ const CreateProject = () => {
             <FormControl isRequired>
               <FormLabel color={'blue.600'}>Categories</FormLabel>
               <Input
+                borderColor={'gray.300'}
+                _placeholder={{ opacity: 1, color: 'gray.400' }}
                 id="categories"
                 placeholder="ex: javascript, game, people, ..."
                 {...register('categories')}
@@ -113,6 +117,8 @@ const CreateProject = () => {
             <FormControl isRequired>
               <FormLabel color={'blue.600'}>Description</FormLabel>
               <Input
+                borderColor={'gray.300'}
+                _placeholder={{ opacity: 1, color: 'gray.400' }}
                 as="textarea"
                 id="description"
                 placeholder={`You can use Markdown syntax to format your text.
@@ -127,29 +133,36 @@ Explain the unique selling points of the project and how it stands out from othe
                 })}
               />
             </FormControl>
-            <FormControl>
-              <FormLabel color={'blue.600'}>Markdown file</FormLabel>
-              <Upload
-                register={register('markdownFile')}
-                value={watch('markdownFile')}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel color={'blue.600'}>Input Values</FormLabel>
-              <Upload
-                register={register('inputFile')}
-                value={watch('inputFile')}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel color={'blue.600'}>Main Function</FormLabel>
-              <Upload
-                register={register('sourceFile')}
-                value={watch('sourceFile')}
-                accept=".js"
-                description="Only accept *.js file"
-              />
-            </FormControl>
+            <Flex
+              justifyContent={'space-between'}
+              gap={{ md: '32px', base: '30px' }}
+              flexDirection={{ md: 'row', base: 'column' }}
+            >
+              <FormControl>
+                <FormLabel color={'blue.600'}>Markdown file</FormLabel>
+                <Upload
+                  register={register('markdownFile')}
+                  value={watch('markdownFile')}
+                  description="Only accept *.md file"
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel color={'blue.600'}>Input Values</FormLabel>
+                <Upload
+                  register={register('inputFile')}
+                  value={watch('inputFile')}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel color={'blue.600'}>Main Function</FormLabel>
+                <Upload
+                  register={register('sourceFile')}
+                  value={watch('sourceFile')}
+                  accept=".js"
+                  description="Only accept *.js file"
+                />
+              </FormControl>
+            </Flex>
             <Flex w="full" justify="flex-end">
               <Button
                 size="md"

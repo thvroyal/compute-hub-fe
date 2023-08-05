@@ -62,6 +62,8 @@ const Upload = ({
             )}
             <VStack spacing="4px">
               <Text
+                textAlign={'center'}
+                mx={'20px'}
                 fontSize="md"
                 lineHeight={6}
                 fontWeight="medium"
