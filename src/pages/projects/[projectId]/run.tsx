@@ -1,4 +1,13 @@
-import { Button, Flex, Heading, Progress, Text, VStack } from '@chakra-ui/react'
+import {
+  Box,
+  Button,
+  Flex,
+  Heading,
+  Icon,
+  Link,
+  Text,
+  VStack
+} from '@chakra-ui/react'
 import Container from 'components/Container'
 import DataWithLabel from 'components/DataWithLabel'
 import { DotIcon, LoadingIcon } from 'components/Icons'
@@ -15,6 +24,15 @@ import animations from 'theme/animations'
 import { formatStopWatch } from 'utils/formatData'
 import { ReportStatus, calculate } from 'helpers/compute'
 import { useSession } from 'next-auth/react'
+import {
+  FcAbout,
+  FcClock,
+  FcDocument,
+  FcElectronics,
+  FcInfo,
+  FcLink,
+  FcSynchronize
+} from 'react-icons/fc'
 
 declare global {
   interface Window {
@@ -24,7 +42,7 @@ declare global {
 }
 
 enum Status {
-  LOADING = 'Loading bundle...',
+  LOADING = 'Loading',
   DISCONNECTED = 'Disconnected',
   RUNNING = 'Running',
   ERROR = 'Error',
@@ -91,12 +109,17 @@ const RunProject = ({
   } = useStopwatch()
   const [reportStatus, setReportStatus] = useState<ReportStatus>(initialStatus)
   const [submitState, setSubmitState] = useState(false)
+  const [showFullDescription, setShowFullDescription] = useState(false)
   const socketRef = useRef<WebSocket | null>(null)
   const { data: session } = useSession()
   const { bucketId } = project
 
   const userId = session?.user.id
   const userName = session?.user.name
+
+  const toggleDescription = () => {
+    setShowFullDescription((prev) => !prev)
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -122,7 +145,7 @@ const RunProject = ({
   const url =
     environment === 'production'
       ? `ws://${project?.host.replace('\n', '')}:${project?.port}`
-      : `ws://192.168.1.18:${project?.port}`
+      : `ws://192.168.8.133:${project?.port}`
 
   let processor: any = null
   let connectTimeout: any
@@ -295,6 +318,27 @@ const RunProject = ({
     console.log(throughput, throughputs)
   }, [reportStatus])
 
+  const handleCopyToClipboard = () => {
+    const textarea = document.createElement('textarea')
+    textarea.value = window.location.href.split('/run')[0]
+    document.body.appendChild(textarea)
+    textarea.select()
+
+    try {
+      const successful = document.execCommand('copy')
+      if (successful) {
+        console.log('Text copied to clipboard!')
+      } else {
+        console.error('Copying text to clipboard failed.')
+      }
+    } catch (error) {
+      console.error('Error copying text to clipboard:', error)
+    }
+
+    // Remove the temporary textarea from the document
+    document.body.removeChild(textarea)
+  }
+
   return (
     <>
       <Script
@@ -302,8 +346,13 @@ const RunProject = ({
         onLoad={handleScriptLoad}
       />
       <Script src={bundleFile} onLoad={handleScriptLoad} />
-      <Container my="60px" px={4} mt={{ base: 8 }}>
-        <Flex flexWrap="wrap" gap="36px" w="full">
+      <Container my="60px" px={4} mt={{ base: 9 }}>
+        <Flex
+          flexWrap="wrap"
+          gap={{ md: '36px', base: '20px' }}
+          w="full"
+          justifyContent={'space-around'}
+        >
           <Flex
             w="min(100%, 500px)"
             flexDir="column"
@@ -312,23 +361,36 @@ const RunProject = ({
             border="1px solid"
             borderRadius="16px"
             borderColor="gray.200"
+            justifyContent="space-between"
           >
             <Heading size="lg">{project.name}</Heading>
-            <Text fontSize="md" lineHeight={6} color="gray.500">
-              {project.description}
+            <Text color="gray.500" fontSize="md" lineHeight={6}>
+              {showFullDescription
+                ? project.description
+                : project.description.slice(0, 160)}
+              {project.description.length > 160 && (
+                <Link color="blue.500" onClick={toggleDescription}>
+                  {showFullDescription ? '' : 'Read More'}
+                </Link>
+              )}
             </Text>
             <Author name={project.author.name} avatarSrc="" />
           </Flex>
-          <VStack spacing="24px" w="min(100%, 500px)" pl={'10px'}>
+          <VStack
+            spacing={{ md: '24px', base: '0px' }}
+            w="min(100%, 600px)"
+            gap={'10px'}
+          >
             <Flex justify="space-between" w="full">
               <DataWithLabel
+                icon={<Icon as={FcInfo} w="20px" h="20px" />}
                 label="Status"
                 value={status}
                 valueProps={{ color: statusColor[status] }}
                 leftAdornment={
                   <DotIcon
-                    w="12px"
-                    h="12px"
+                    w="17.5px"
+                    h="17.5px"
                     color={statusColor[status]}
                     animation={
                       status === Status.RUNNING
@@ -338,8 +400,14 @@ const RunProject = ({
                   />
                 }
               />
-              <DataWithLabel label="Platform" value="100" />
+
               <DataWithLabel
+                icon={<Icon as={FcAbout} w={'20px'} h={'20px'} />}
+                label="Platform"
+                value="Node.js"
+              />
+              <DataWithLabel
+                icon={<Icon as={FcClock} w={'20px'} h={'20px'} />}
                 label="Duration"
                 value={timer}
                 rightAdornment={
@@ -356,30 +424,52 @@ const RunProject = ({
                 }
               />
             </Flex>
-            <DataWithLabel
-              label="Url"
-              value="http://localhost:3000/projects/6479766078ef1e038b8a0097"
-            />
-            <Flex justify="space-between" w="full">
-              <DataWithLabel label="OPS" value={reportStatus.throughput} />
-              <DataWithLabel label="CPU Usage" value={reportStatus.cpuUsage} />
+            <Flex
+              justify="space-between"
+              w="full"
+              wordBreak="break-word"
+              onClick={handleCopyToClipboard}
+              cursor="pointer"
+            >
               <DataWithLabel
+                border={true}
+                icon={<Icon as={FcLink} w={'20px'} h={'20px'} />}
+                label="Url - Click to copy"
+                value={window.location.href.split('/run')[0]}
+              />
+            </Flex>
+
+            <Flex justify="space-between" w="full">
+              <DataWithLabel
+                icon={<Icon as={FcSynchronize} w={'20px'} h={'20px'} />}
+                label="OPS"
+                value={reportStatus.throughput}
+              />
+              <DataWithLabel
+                icon={<Icon as={FcElectronics} w={'20px'} h={'20px'} />}
+                label="CPU Usage"
+                value={reportStatus.cpuUsage}
+              />
+              <DataWithLabel
+                icon={<Icon as={FcDocument} w={'20px'} h={'20px'} />}
                 label="My output"
                 value={reportStatus.totalOutput}
               />
             </Flex>
+            {project?.host && (
+              <Button
+                onClick={handleClick}
+                w="full"
+                flex="1"
+                minW="150px"
+                minHeight={'50px'}
+                maxHeight={'50px'}
+                colorScheme={starting ? 'red' : 'blue'}
+              >
+                {starting ? 'Terminate' : 'Start'}
+              </Button>
+            )}
           </VStack>
-          {project?.host && (
-            <Button
-              onClick={handleClick}
-              w="full"
-              flex="1"
-              minW="150px"
-              colorScheme={starting ? 'red' : 'blue'}
-            >
-              {starting ? 'Terminate' : 'Start'}
-            </Button>
-          )}
         </Flex>
         <VStack
           spacing="24px"

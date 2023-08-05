@@ -133,32 +133,23 @@ export const calculate = (
 }
 
 export const renderActiveShape = (props: any) => {
-  const RADIAN = Math.PI / 180
   const {
     cx,
     cy,
-    midAngle,
     innerRadius,
     outerRadius,
     startAngle,
     endAngle,
     fill,
     payload,
-    percent,
     average
   } = props
-  const sin = Math.sin(-RADIAN * midAngle)
-  const cos = Math.cos(-RADIAN * midAngle)
-  const sx = cx + (outerRadius + 10) * cos
-  const sy = cy + (outerRadius + 10) * sin
-  const mx = cx + (outerRadius + 30) * cos
-  const my = cy + (outerRadius + 30) * sin
-  const ex = mx + (cos >= 0 ? 1 : -1) * 22
-  const ey = my
-  const textAnchor = cos >= 0 ? 'start' : 'end'
 
   return (
     <g>
+      <text x={cx} y={30} fontWeight={'bold'} textAnchor="middle" fill={fill}>
+        {payload.userName}
+      </text>
       <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill}>
         {`${average.toFixed(2)} OPS`}
       </text>
@@ -180,35 +171,6 @@ export const renderActiveShape = (props: any) => {
         outerRadius={outerRadius + 10}
         fill={payload.userName === 'You' ? '#82ca9d' : '#8884d8'}
       />
-      <path
-        d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`}
-        stroke={payload.userName === 'You' ? '#82ca9d' : '#8884d8'}
-        fill="none"
-      />
-      <circle
-        cx={ex}
-        cy={ey}
-        r={2}
-        fill={payload.userName === 'You' ? '#82ca9d' : '#8884d8'}
-        stroke="none"
-      />
-      <text
-        x={ex + (cos >= 0 ? 1 : -1) * 12}
-        y={ey}
-        textAnchor={textAnchor}
-        fill="#333"
-      >
-        {payload.userName}
-      </text>
-      <text
-        x={ex + (cos >= 0 ? 1 : -1) * 12}
-        y={ey}
-        dy={18}
-        textAnchor={textAnchor}
-        fill="#999"
-      >
-        {`(${(percent * 100).toFixed(2)}%)`}
-      </text>
     </g>
   )
 }
@@ -337,16 +299,10 @@ export const getHighestAverageOutputUser = (
     },
     {}
   )
-  // console.log(userAverages)
-  // Sort the users by average in descending order
   const sortedUsers = Object.values(userAverages).sort(
     (a: any, b: any) => b.average - a.average
   )
-  // Find the two different users with highest averages
   const topUsers = sortedUsers.slice(0, 4)
-  // return topUsers
-
-  console.log(topUsers)
 
   return topUsers
 }

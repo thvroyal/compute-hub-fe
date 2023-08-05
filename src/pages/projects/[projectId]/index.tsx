@@ -9,7 +9,8 @@ import {
   Text,
   VStack,
   Image,
-  Box
+  Box,
+  Link
 } from '@chakra-ui/react'
 import Container from 'components/Container'
 import { ThreeDotIcon } from 'components/Icons'
@@ -18,6 +19,7 @@ import { getMarkdownFileContent } from 'libs/markdown'
 import { GetStaticProps, InferGetStaticPropsType } from 'next'
 import { useRouter } from 'next/router'
 import path from 'path'
+import { useState } from 'react'
 import { Project } from 'types/Project'
 
 const DetailProject = (
@@ -25,14 +27,26 @@ const DetailProject = (
 ) => {
   const router = useRouter()
   const { descriptionMarkdown, project } = props
-  const { name, description, computeInfo, author, createdAt } = project || {}
+  const { name, description, computeInfo, author, createdAt, status } =
+    project || {}
   const { contentHtml } = descriptionMarkdown || {}
+
+  const [showFullDescription, setShowFullDescription] = useState(false)
+
+  const toggleDescription = () => {
+    setShowFullDescription((prev) => !prev)
+  }
 
   const detailData = [
     {
       key: 'unprocessed_unit',
       label: 'Total Input',
       value: computeInfo?.totalInput
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      value: status
     },
     {
       key: 'estimated_time',
@@ -71,10 +85,10 @@ const DetailProject = (
     <Container>
       <Grid
         w="full"
-        templateColumns={{ md: 'repeat(8,1fr)', base: 'repeat(1, 1fr)' }}
+        templateColumns={{ md: 'repeat(8, 1fr)', base: 'repeat(1, 1fr)' }}
       >
         <GridItem
-          colSpan={1}
+          colSpan={3}
           p={{ md: '24px 48px 24px 0px' }}
           position={{ base: 'relative', md: 'sticky' }}
           // position={'sticky'}
@@ -89,33 +103,56 @@ const DetailProject = (
               <IconButton aria-label="more options" icon={<ThreeDotIcon />} />
             </Flex>
             <Text color="gray.500" fontSize="md" lineHeight={6}>
-              {description}
+              {showFullDescription
+                ? project.description
+                : project.description.slice(0, 160)}
+              {project.description.length > 160 && (
+                <Link color="blue.500" onClick={toggleDescription}>
+                  {showFullDescription ? '' : 'Read More'}
+                </Link>
+              )}
             </Text>
             {/* Stats of project */}
             <VStack w="full" spacing="0">
-              {detailData.map((item) => (
-                <Flex
-                  key={item.key}
-                  w="full"
-                  justify="space-between"
-                  align="center"
-                  py="12px"
-                  borderTop="1px solid"
-                  borderColor="blackAlpha.200"
-                >
-                  <Text
-                    color="gray.700"
-                    fontSize="sm"
-                    lineHeight={5}
-                    fontWeight="semibold"
+              {detailData.map((item) => {
+                let textColor
+                switch (item.value) {
+                  case 'error':
+                    textColor = 'red.500'
+                    break
+                  case 'running':
+                    textColor = 'yellow.500'
+                    break
+                  case 'completed':
+                    textColor = 'green.500'
+                    break
+                  default:
+                    textColor = 'grey.700'
+                }
+                return (
+                  <Flex
+                    key={item.key}
+                    w="full"
+                    justify="space-between"
+                    align="center"
+                    py="12px"
+                    borderTop="1px solid"
+                    borderColor="blackAlpha.200"
                   >
-                    {item.label}
-                  </Text>
-                  <Text color="gray.500" fontSize="md" lineHeight={6}>
-                    {item.value}
-                  </Text>
-                </Flex>
-              ))}
+                    <Text
+                      color="grey.700"
+                      fontSize="sm"
+                      lineHeight={5}
+                      fontWeight="semibold"
+                    >
+                      {item.label}
+                    </Text>
+                    <Text color={textColor} fontSize="md" lineHeight={6}>
+                      {item.value}
+                    </Text>
+                  </Flex>
+                )
+              })}
             </VStack>
             {/* Actions */}
             <HStack w="full" spacing="36px">

@@ -5,6 +5,7 @@ export interface Project {
   categories: string[]
   description: string
   createdAt: string
+  status: string
   author?: {
     id: string
     name: string
