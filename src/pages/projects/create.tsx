@@ -22,6 +22,7 @@ interface FormValues {
   name: string
   categories: string
   description: string
+  markdownFile: FileList
   inputFile: FileList
   sourceFile: FileList
 }
@@ -36,6 +37,7 @@ const CreateProject = () => {
     formData.append('name', values.name)
     formData.append('categories', values.categories)
     formData.append('description', values.description)
+    formData.append('markdownFile', values.markdownFile[0])
     formData.append('inputFile', values.inputFile[0])
     formData.append('sourceFile', values.sourceFile[0])
     setLoading(true)
@@ -123,6 +125,13 @@ Explain the unique selling points of the project and how it stands out from othe
                 {...register('description', {
                   required: 'This is required'
                 })}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel color={'blue.600'}>Markdown file</FormLabel>
+              <Upload
+                register={register('markdownFile')}
+                value={watch('markdownFile')}
               />
             </FormControl>
             <FormControl>
