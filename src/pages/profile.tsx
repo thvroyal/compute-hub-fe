@@ -67,7 +67,7 @@ export default function Profile({
                 Published project
               </Heading>
               <Flex flexWrap="wrap" gap="24px">
-                {projects.map(({ id, name, categories }) => (
+                {projects.map(({ id, name, categories, description }) => (
                   <Box
                     as="div"
                     w={{ base: '100%', md: 'calc(50% - 12px)' }}
@@ -76,7 +76,7 @@ export default function Profile({
                     <ProjectCard
                       name={name}
                       id={id}
-                      description="Amicable Numbers is an independent research project that uses Internet-connected computers to find new amicable pairs. You can contribute to our research by running a free program on your computer."
+                      description={description}
                       categories={categories}
                       compact
                     />

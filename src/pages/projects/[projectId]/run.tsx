@@ -33,6 +33,7 @@ import {
   FcLink,
   FcSynchronize
 } from 'react-icons/fc'
+import zlib from 'zlib'
 
 declare global {
   interface Window {
@@ -62,8 +63,6 @@ const MAX_SCRIPTS = 2
 const initialStatus: ReportStatus = {
   totalOutput: 0,
   cpuTime: 0,
-  dataTransferTime: 0,
-  nbItems: 0,
   throughput: 0,
   throughputs: [],
   throughputStats: {
@@ -80,14 +79,7 @@ const initialStatus: ReportStatus = {
     maximum: 0,
     minimum: 0
   },
-  dataTransferLoad: 0,
-  dataTransferLoads: [],
-  dataTransferStats: {
-    average: 0,
-    'standard-deviation': 0,
-    maximum: 0,
-    minimum: 0
-  }
+  startTime: 0
 }
 
 const RunProject = ({
@@ -126,7 +118,6 @@ const RunProject = ({
     const fetchData = async () => {
       try {
         const response = await getProjectReport(bucketId)
-        console.log(userId)
         const contributedItems = getNumberOfOutputByUserId(
           response.data.projectReport.totalOutput,
           userId
@@ -141,7 +132,7 @@ const RunProject = ({
     }
 
     fetchData()
-  }, [])
+  }, [session])
 
   const url =
     environment === 'production'
@@ -149,6 +140,7 @@ const RunProject = ({
       : `ws://localhost:${project?.port}`
 
   let processor: any = null
+  let socket: any = null
   let connectTimeout: any
 
   const restart = () => {
@@ -165,11 +157,17 @@ const RunProject = ({
   }
 
   const start = () => {
-    processor = null
-    setTimeout(() => {
-      console.log('connecting over WebSocket')
+    let totalOutputTmp = reportStatus.totalOutput
 
-      processor = window.volunteer['websocket'](
+    setReportStatus((prevStats) => ({
+      ...prevStats,
+      startTime: Date.now()
+    }))
+
+    processor = null
+    socket = null
+    setTimeout(() => {
+      ;[processor, socket] = window.volunteer['websocket'](
         `${url}/volunteer`,
         window.bundle
       )
@@ -177,6 +175,18 @@ const RunProject = ({
 
       processor.on('status', (summary: any) => {
         console.log(summary)
+      })
+
+      socket.on('return', (x: any) => {
+        totalOutputTmp += 1
+        const data = {
+          output: x,
+          userId: userId,
+          totalOutput: totalOutputTmp
+        }
+        socket.send(
+          zlib.gzipSync(Buffer.from(JSON.stringify(data))).toString('base64')
+        )
       })
 
       processor.on('close', () => {
@@ -202,8 +212,16 @@ const RunProject = ({
         setLogs((current) => [value, ...current])
       })
 
-      processor.on('deltaTime', (value: number) => {
-        report(value)
+      processor.on('deltaTime', (deltaTime: number) => {
+        setReportStatus((prevStatus) => {
+          const updatedStatus = { ...prevStatus }
+          calculate(setReportStatus, deltaTime)
+          submit(updatedStatus)
+          setSubmitState((prev) => !prev)
+          return updatedStatus
+        })
+
+        // report(deltaTime)
       })
 
       console.log('setting restart timeout')
@@ -233,7 +251,7 @@ const RunProject = ({
   }
 
   const submit = (info: ReportStatus) => {
-    const { dataTransferLoads, throughputs, cpuUsages, ...sendData } = info
+    const { throughputs, cpuUsages, ...sendData } = info
     const reportData = {
       userId: userId,
       userName: userName,
@@ -266,38 +284,12 @@ const RunProject = ({
     }
   }, [intervalId])
 
-  const report = (deltaTime: number) => {
-    setReportStatus((prevStatus) => ({
-      ...prevStatus,
-      totalOutput: prevStatus.totalOutput + 1,
-      nbItems: prevStatus.nbItems + 1,
-      cpuTime: prevStatus.cpuTime + deltaTime
-    }))
-  }
-
   const handleClick = async () => {
     if (numOfScriptLoaded === MAX_SCRIPTS) {
       if (status !== Status.RUNNING) {
         start()
-        // Start the interval when the button is clicked
-        if (intervalId === null) {
-          const newIntervalId = setInterval(() => {
-            setReportStatus((prevStatus) => {
-              const updatedStatus = { ...prevStatus }
-              calculate(updatedStatus, setReportStatus)
-              submit(updatedStatus)
-              return updatedStatus
-            })
-            setSubmitState((prevState) => !prevState)
-          }, 3002)
-          setIntervalId(newIntervalId)
-        }
       } else {
         window.location.reload()
-        // processor.terminate()
-        // setStatus(Status.DISCONNECTED)
-        // pause()
-        // processor = null
       }
     }
   }
@@ -314,11 +306,6 @@ const RunProject = ({
 
   const starting = status === Status.RUNNING
   const timer = formatStopWatch({ seconds, minutes, hours })
-
-  useEffect(() => {
-    const { throughput, throughputs } = reportStatus
-    console.log(throughput, throughputs)
-  }, [reportStatus])
 
   const handleCopyToClipboard = () => {
     const textarea = document.createElement('textarea')
@@ -447,7 +434,7 @@ const RunProject = ({
               <DataWithLabel
                 icon={<Icon as={FcElectronics} w={'20px'} h={'20px'} />}
                 label="CPU Usage"
-                value={reportStatus.cpuUsage}
+                value={reportStatus.cpuUsage.toFixed(5)}
               />
               <DataWithLabel
                 icon={<Icon as={FcDocument} w={'20px'} h={'20px'} />}

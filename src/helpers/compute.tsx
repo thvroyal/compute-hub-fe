@@ -4,8 +4,6 @@ import { Sector } from 'recharts'
 export interface ReportStatus {
   totalOutput: number
   cpuTime: number
-  dataTransferTime: number
-  nbItems: number
   throughput: number
   throughputs: number[]
   throughputStats: {
@@ -22,14 +20,7 @@ export interface ReportStatus {
     maximum: number
     minimum: number
   }
-  dataTransferLoad: number
-  dataTransferLoads: number[]
-  dataTransferStats: {
-    average: number
-    'standard-deviation': number
-    maximum: number
-    minimum: number
-  }
+  startTime: number
 }
 
 const sum = (a: number[]): number => {
@@ -73,63 +64,36 @@ export const minimum = (a: number[]): number => {
   return min
 }
 
-interface ReportInfo {
-  cpuTime: number
-  dataTransferTime: number
-  nbItems: number
-}
-
 export const calculate = (
-  info: ReportInfo,
-  setReportStatus: Dispatch<SetStateAction<ReportStatus>>
+  setReportStatus: Dispatch<SetStateAction<ReportStatus>>,
+  deltaTime: number
 ) => {
-  const reportInfo = {
-    cpuTime: info.cpuTime || 1000,
-    dataTransferTime: info.dataTransferTime || 0,
-    nbItems: info.nbItems || 0
-  }
+  setReportStatus((prevStatus) => {
+    const duration = Date.now() - prevStatus.startTime
+    return {
+      ...prevStatus,
+      totalOutput: prevStatus.totalOutput + 1,
+      cpuTime: deltaTime,
+      throughput: 1 / (deltaTime / 1000),
+      throughputStats: {
+        maximum: Number(maximum(prevStatus.throughputs)),
+        minimum: Number(minimum(prevStatus.throughputs)),
+        average: Number(average(prevStatus.throughputs)),
+        'standard-deviation': Number(standardDeviation(prevStatus.throughputs))
+      },
 
-  const duration = 3000
-
-  setReportStatus((prevStatus) => ({
-    ...prevStatus,
-    totalOutput: prevStatus.totalOutput,
-    nbItems: prevStatus.nbItems + reportInfo.nbItems,
-    cpuTime: prevStatus.cpuTime + reportInfo.cpuTime,
-    dataTransferTime: prevStatus.dataTransferTime + reportInfo.dataTransferTime,
-    throughput: prevStatus.nbItems / (duration / 1000),
-    throughputStats: {
-      maximum: Number(maximum(prevStatus.throughputs)),
-      minimum: Number(minimum(prevStatus.throughputs)),
-      average: Number(average(prevStatus.throughputs)),
-      'standard-deviation': Number(standardDeviation(prevStatus.throughputs))
-    },
-    dataTransferLoad: (prevStatus.dataTransferTime / duration) * 100,
-    dataTransferStats: {
-      maximum: Number(maximum(prevStatus.dataTransferLoads)),
-      minimum: Number(minimum(prevStatus.dataTransferLoads)),
-      average: Number(average(prevStatus.dataTransferLoads)),
-      'standard-deviation': Number(
-        standardDeviation(prevStatus.dataTransferLoads)
-      )
-    },
-    cpuUsage: (prevStatus.cpuTime / duration) * 100,
-    cpuUsageStats: {
-      maximum: Number(maximum(prevStatus.cpuUsages)),
-      minimum: Number(minimum(prevStatus.cpuUsages)),
-      average: Number(average(prevStatus.cpuUsages)),
-      'standard-deviation': Number(standardDeviation(prevStatus.cpuUsages))
-    },
-    throughputs: [
-      ...prevStatus.throughputs,
-      prevStatus.nbItems / (duration / 1000)
-    ],
-    cpuUsages: [...prevStatus.cpuUsages, (prevStatus.cpuTime / duration) * 100],
-    dataTransferLoads: [
-      ...prevStatus.dataTransferLoads,
-      (prevStatus.dataTransferTime / duration) * 100
-    ]
-  }))
+      cpuUsage: (deltaTime / duration) * 100,
+      cpuUsageStats: {
+        maximum: Number(maximum(prevStatus.cpuUsages)),
+        minimum: Number(minimum(prevStatus.cpuUsages)),
+        average: Number(average(prevStatus.cpuUsages)),
+        'standard-deviation': Number(standardDeviation(prevStatus.cpuUsages))
+      },
+      throughputs: [...prevStatus.throughputs, 1 / (deltaTime / 1000)],
+      cpuUsages: [...prevStatus.cpuUsages, (deltaTime / duration) * 100],
+      startTime: Date.now()
+    }
+  })
 }
 
 export const renderActiveShape = (props: any) => {

@@ -33,7 +33,7 @@ const Upload = ({
   }
 
   return (
-    <FormControl>
+    <FormControl minW={{ base: '340px', md: '290px' }}>
       <Input
         {...rest}
         type="file"
