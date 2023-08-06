@@ -4,8 +4,6 @@ import { Sector } from 'recharts'
 export interface ReportStatus {
   totalOutput: number
   cpuTime: number
-  dataTransferTime: number
-  nbItems: number
   throughput: number
   throughputs: number[]
   throughputStats: {
@@ -22,14 +20,7 @@ export interface ReportStatus {
     maximum: number
     minimum: number
   }
-  dataTransferLoad: number
-  dataTransferLoads: number[]
-  dataTransferStats: {
-    average: number
-    'standard-deviation': number
-    maximum: number
-    minimum: number
-  }
+  startTime: number
 }
 
 const sum = (a: number[]): number => {
@@ -73,92 +64,56 @@ export const minimum = (a: number[]): number => {
   return min
 }
 
-interface ReportInfo {
-  cpuTime: number
-  dataTransferTime: number
-  nbItems: number
-}
-
 export const calculate = (
-  info: ReportInfo,
-  setReportStatus: Dispatch<SetStateAction<ReportStatus>>
+  setReportStatus: Dispatch<SetStateAction<ReportStatus>>,
+  deltaTime: number
 ) => {
-  const reportInfo = {
-    cpuTime: info.cpuTime || 1000,
-    dataTransferTime: info.dataTransferTime || 0,
-    nbItems: info.nbItems || 0
-  }
+  setReportStatus((prevStatus) => {
+    const duration = Date.now() - prevStatus.startTime
+    return {
+      ...prevStatus,
+      totalOutput: prevStatus.totalOutput + 1,
+      cpuTime: deltaTime,
+      throughput: 1 / (deltaTime / 1000),
+      throughputStats: {
+        maximum: Number(maximum(prevStatus.throughputs)),
+        minimum: Number(minimum(prevStatus.throughputs)),
+        average: Number(average(prevStatus.throughputs)),
+        'standard-deviation': Number(standardDeviation(prevStatus.throughputs))
+      },
 
-  const duration = 3000
-
-  setReportStatus((prevStatus) => ({
-    ...prevStatus,
-    totalOutput: prevStatus.totalOutput,
-    nbItems: prevStatus.nbItems + reportInfo.nbItems,
-    cpuTime: prevStatus.cpuTime + reportInfo.cpuTime,
-    dataTransferTime: prevStatus.dataTransferTime + reportInfo.dataTransferTime,
-    throughput: prevStatus.nbItems / (duration / 1000),
-    throughputStats: {
-      maximum: Number(maximum(prevStatus.throughputs)),
-      minimum: Number(minimum(prevStatus.throughputs)),
-      average: Number(average(prevStatus.throughputs)),
-      'standard-deviation': Number(standardDeviation(prevStatus.throughputs))
-    },
-    dataTransferLoad: (prevStatus.dataTransferTime / duration) * 100,
-    dataTransferStats: {
-      maximum: Number(maximum(prevStatus.dataTransferLoads)),
-      minimum: Number(minimum(prevStatus.dataTransferLoads)),
-      average: Number(average(prevStatus.dataTransferLoads)),
-      'standard-deviation': Number(
-        standardDeviation(prevStatus.dataTransferLoads)
-      )
-    },
-    cpuUsage: (prevStatus.cpuTime / duration) * 100,
-    cpuUsageStats: {
-      maximum: Number(maximum(prevStatus.cpuUsages)),
-      minimum: Number(minimum(prevStatus.cpuUsages)),
-      average: Number(average(prevStatus.cpuUsages)),
-      'standard-deviation': Number(standardDeviation(prevStatus.cpuUsages))
-    },
-    throughputs: [
-      ...prevStatus.throughputs,
-      prevStatus.nbItems / (duration / 1000)
-    ],
-    cpuUsages: [...prevStatus.cpuUsages, (prevStatus.cpuTime / duration) * 100],
-    dataTransferLoads: [
-      ...prevStatus.dataTransferLoads,
-      (prevStatus.dataTransferTime / duration) * 100
-    ]
-  }))
+      cpuUsage: (deltaTime / duration) * 100,
+      cpuUsageStats: {
+        maximum: Number(maximum(prevStatus.cpuUsages)),
+        minimum: Number(minimum(prevStatus.cpuUsages)),
+        average: Number(average(prevStatus.cpuUsages)),
+        'standard-deviation': Number(standardDeviation(prevStatus.cpuUsages))
+      },
+      throughputs: [...prevStatus.throughputs, 1 / (deltaTime / 1000)],
+      cpuUsages: [...prevStatus.cpuUsages, (deltaTime / duration) * 100],
+      startTime: Date.now()
+    }
+  })
 }
 
 export const renderActiveShape = (props: any) => {
-  const RADIAN = Math.PI / 180
   const {
     cx,
     cy,
-    midAngle,
     innerRadius,
     outerRadius,
     startAngle,
     endAngle,
     fill,
     payload,
-    percent,
     average
   } = props
-  const sin = Math.sin(-RADIAN * midAngle)
-  const cos = Math.cos(-RADIAN * midAngle)
-  const sx = cx + (outerRadius + 10) * cos
-  const sy = cy + (outerRadius + 10) * sin
-  const mx = cx + (outerRadius + 30) * cos
-  const my = cy + (outerRadius + 30) * sin
-  const ex = mx + (cos >= 0 ? 1 : -1) * 22
-  const ey = my
-  const textAnchor = cos >= 0 ? 'start' : 'end'
 
   return (
     <g>
+      <text x={cx} y={30} fontWeight={'bold'} textAnchor="middle" fill={fill}>
+        {payload.userName}
+      </text>
       <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill}>
         {`${average.toFixed(2)} OPS`}
       </text>
@@ -169,7 +124,7 @@ export const renderActiveShape = (props: any) => {
         outerRadius={outerRadius}
         startAngle={startAngle}
         endAngle={endAngle}
-        fill={fill}
+        fill={payload.userName === 'You' ? '#82ca9d' : '#8884d8'}
       />
       <Sector
         cx={cx}
@@ -178,31 +133,8 @@ export const renderActiveShape = (props: any) => {
         endAngle={endAngle}
         innerRadius={outerRadius + 6}
         outerRadius={outerRadius + 10}
-        fill={fill}
+        fill={payload.userName === 'You' ? '#82ca9d' : '#8884d8'}
       />
-      <path
-        d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`}
-        stroke={fill}
-        fill="none"
-      />
-      <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
-      <text
-        x={ex + (cos >= 0 ? 1 : -1) * 12}
-        y={ey}
-        textAnchor={textAnchor}
-        fill="#333"
-      >
-        {payload.userName}
-      </text>
-      <text
-        x={ex + (cos >= 0 ? 1 : -1) * 12}
-        y={ey}
-        dy={18}
-        textAnchor={textAnchor}
-        fill="#999"
-      >
-        {`(${(percent * 100).toFixed(2)}%)`}
-      </text>
     </g>
   )
 }
@@ -301,7 +233,10 @@ export const getHistoricalData = (data: any) => {
   return result
 }
 
-export const getHighestAverageOutputUser = (data: any) => {
+export const getHighestAverageOutputUser = (
+  data: any,
+  user: string | undefined
+) => {
   // Group the data by user and calculate average for each user
   const userAverages = data.reduce(
     (
@@ -319,21 +254,19 @@ export const getHighestAverageOutputUser = (data: any) => {
           userName: obj.userName,
           average: obj.average
         }
+
+        if (user === obj.userId) {
+          accumulator[obj.userId].userName = 'You'
+        }
       }
       return accumulator
     },
     {}
   )
-  // console.log(userAverages)
-  // Sort the users by average in descending order
   const sortedUsers = Object.values(userAverages).sort(
     (a: any, b: any) => b.average - a.average
   )
-  // Find the two different users with highest averages
-  const topUsers = sortedUsers.slice(0, 2)
-  // return topUsers
-
-  console.log(topUsers)
+  const topUsers = sortedUsers.slice(0, 4)
 
   return topUsers
 }

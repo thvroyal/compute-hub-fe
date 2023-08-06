@@ -1,7 +1,16 @@
-import { Button, Flex, Heading, Text, VStack } from '@chakra-ui/react'
+import {
+  Button,
+  Flex,
+  Heading,
+  Icon,
+  Link,
+  Text,
+  VStack,
+  useToast
+} from '@chakra-ui/react'
 import Container from 'components/Container'
 import DataWithLabel from 'components/DataWithLabel'
-import { DotIcon, LoadingIcon } from 'components/Icons'
+import { LoadingIcon } from 'components/Icons'
 import { Author } from 'components/ProjectCard/States'
 import Logs, { LogsProps } from 'components/Table/Logs'
 import { getProjectById, getProjectReport } from 'helpers/apis'
@@ -15,6 +24,16 @@ import animations from 'theme/animations'
 import { formatStopWatch } from 'utils/formatData'
 import { ReportStatus, calculate } from 'helpers/compute'
 import { useSession } from 'next-auth/react'
+import {
+  FcAbout,
+  FcClock,
+  FcDocument,
+  FcElectronics,
+  FcInfo,
+  FcLink,
+  FcSynchronize
+} from 'react-icons/fc'
+import zlib from 'zlib'
 
 declare global {
   interface Window {
@@ -24,7 +43,7 @@ declare global {
 }
 
 enum Status {
-  LOADING = 'Loading bundle...',
+  LOADING = 'Loading',
   DISCONNECTED = 'Disconnected',
   RUNNING = 'Running',
   ERROR = 'Error',
@@ -44,8 +63,6 @@ const MAX_SCRIPTS = 2
 const initialStatus: ReportStatus = {
   totalOutput: 0,
   cpuTime: 0,
-  dataTransferTime: 0,
-  nbItems: 0,
   throughput: 0,
   throughputs: [],
   throughputStats: {
@@ -62,14 +79,7 @@ const initialStatus: ReportStatus = {
     maximum: 0,
     minimum: 0
   },
-  dataTransferLoad: 0,
-  dataTransferLoads: [],
-  dataTransferStats: {
-    average: 0,
-    'standard-deviation': 0,
-    maximum: 0,
-    minimum: 0
-  }
+  startTime: 0
 }
 
 const RunProject = ({
@@ -91,22 +101,23 @@ const RunProject = ({
   } = useStopwatch()
   const [reportStatus, setReportStatus] = useState<ReportStatus>(initialStatus)
   const [submitState, setSubmitState] = useState(false)
+  const [showFullDescription, setShowFullDescription] = useState(false)
   const socketRef = useRef<WebSocket | null>(null)
   const { data: session } = useSession()
   const { bucketId } = project
 
   const userId = session?.user.id
   const userName = session?.user.name
+  const toast = useToast()
 
-  // useEffect(() => {
-  //   console.log(reportStatus)
-  // }, [reportStatus])
+  const toggleDescription = () => {
+    setShowFullDescription((prev) => !prev)
+  }
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await getProjectReport(bucketId)
-        console.log(userId)
         const contributedItems = getNumberOfOutputByUserId(
           response.data.projectReport.totalOutput,
           userId
@@ -121,7 +132,7 @@ const RunProject = ({
     }
 
     fetchData()
-  }, [])
+  }, [session])
 
   const url =
     environment === 'production'
@@ -129,6 +140,7 @@ const RunProject = ({
       : `ws://localhost:${project?.port}`
 
   let processor: any = null
+  let socket: any = null
   let connectTimeout: any
 
   const restart = () => {
@@ -145,11 +157,17 @@ const RunProject = ({
   }
 
   const start = () => {
-    processor = null
-    setTimeout(() => {
-      console.log('connecting over WebSocket')
+    let totalOutputTmp = reportStatus.totalOutput
 
-      processor = window.volunteer['websocket'](
+    setReportStatus((prevStats) => ({
+      ...prevStats,
+      startTime: Date.now()
+    }))
+
+    processor = null
+    socket = null
+    setTimeout(() => {
+      ;[processor, socket] = window.volunteer['websocket'](
         `${url}/volunteer`,
         window.bundle
       )
@@ -157,6 +175,18 @@ const RunProject = ({
 
       processor.on('status', (summary: any) => {
         console.log(summary)
+      })
+
+      socket.on('return', (x: any) => {
+        totalOutputTmp += 1
+        const data = {
+          output: x,
+          userId: userId,
+          totalOutput: totalOutputTmp
+        }
+        socket.send(
+          zlib.gzipSync(Buffer.from(JSON.stringify(data))).toString('base64')
+        )
       })
 
       processor.on('close', () => {
@@ -182,8 +212,16 @@ const RunProject = ({
         setLogs((current) => [value, ...current])
       })
 
-      processor.on('deltaTime', (value: number) => {
-        report(value)
+      processor.on('deltaTime', (deltaTime: number) => {
+        setReportStatus((prevStatus) => {
+          const updatedStatus = { ...prevStatus }
+          calculate(setReportStatus, deltaTime)
+          submit(updatedStatus)
+          setSubmitState((prev) => !prev)
+          return updatedStatus
+        })
+
+        // report(deltaTime)
       })
 
       console.log('setting restart timeout')
@@ -213,14 +251,16 @@ const RunProject = ({
   }
 
   const submit = (info: ReportStatus) => {
-    const { dataTransferLoads, throughputs, cpuUsages, ...sendData } = info
+    const { throughputs, cpuUsages, ...sendData } = info
     const reportData = {
       userId: userId,
       userName: userName,
       ...sendData
     }
-    if (socketRef.current) {
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify(reportData))
+    } else {
+      console.log('WebSocket connection is not open.')
     }
   }
 
@@ -233,39 +273,23 @@ const RunProject = ({
     }))
   }, [submitState])
 
+  const [intervalId, setIntervalId] = useState<null | NodeJS.Timeout>(null)
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      setReportStatus((prevStatus) => {
-        const updatedStatus = { ...prevStatus }
-        calculate(updatedStatus, setReportStatus)
-        submit(updatedStatus)
-        return updatedStatus
-      })
-      setSubmitState((prevState) => !prevState)
-    }, 3002)
-
-    return () => clearInterval(interval)
-  }, [submitState])
-
-  const report = (deltaTime: number) => {
-    setReportStatus((prevStatus) => ({
-      ...prevStatus,
-      totalOutput: prevStatus.totalOutput + 1,
-      nbItems: prevStatus.nbItems + 1,
-      cpuTime: prevStatus.cpuTime + deltaTime,
-      dataTransferTime: prevStatus.dataTransferTime + 0
-    }))
-  }
+    // Clean up the interval when the component unmounts
+    return () => {
+      if (intervalId !== null) {
+        clearInterval(intervalId)
+      }
+    }
+  }, [intervalId])
 
   const handleClick = async () => {
     if (numOfScriptLoaded === MAX_SCRIPTS) {
       if (status !== Status.RUNNING) {
         start()
-      } else if (processor) {
-        processor.terminate()
-        setStatus(Status.DISCONNECTED)
-        pause()
-        processor = null
+      } else {
+        window.location.reload()
       }
     }
   }
@@ -283,6 +307,34 @@ const RunProject = ({
   const starting = status === Status.RUNNING
   const timer = formatStopWatch({ seconds, minutes, hours })
 
+  const handleCopyToClipboard = () => {
+    const textarea = document.createElement('textarea')
+    textarea.value = 'http://localhost:3000/projects/' + project.projectId
+    document.body.appendChild(textarea)
+    textarea.select()
+
+    try {
+      const successful = document.execCommand('copy')
+      if (successful) {
+        console.log('Text copied to clipboard!')
+        toast({
+          title: 'Copied to clipboard',
+          description: 'Project link copied to clipboard',
+          status: 'success',
+          duration: 1000,
+          isClosable: false
+        })
+      } else {
+        console.error('Copying text to clipboard failed.')
+      }
+    } catch (error) {
+      console.error('Error copying text to clipboard:', error)
+    }
+
+    // Remove the temporary textarea from the document
+    document.body.removeChild(textarea)
+  }
+
   return (
     <>
       <Script
@@ -290,8 +342,13 @@ const RunProject = ({
         onLoad={handleScriptLoad}
       />
       <Script src={bundleFile} onLoad={handleScriptLoad} />
-      <Container my="60px">
-        <Flex flexWrap="wrap" gap="36px" w="full">
+      <Container my="60px" px={4} mt={{ base: 9 }}>
+        <Flex
+          flexWrap="wrap"
+          gap={{ md: '36px', base: '20px' }}
+          w="full"
+          justifyContent={'space-around'}
+        >
           <Flex
             w="min(100%, 500px)"
             flexDir="column"
@@ -300,35 +357,43 @@ const RunProject = ({
             border="1px solid"
             borderRadius="16px"
             borderColor="gray.200"
+            justifyContent="space-between"
           >
-            <Heading size="lg">Amicable Numbers</Heading>
-            <Text fontSize="md" lineHeight={6} color="gray.500">
-              Amicable Numbers is an independent research project that uses
-              Internet-connected computers to find new amicable pairs
-            </Text>
-            <Author name="thvroyal" avatarSrc="" />
+            <Heading size="lg">{project.name}</Heading>
+            {project.description && (
+              <Text color="gray.500" fontSize="md" lineHeight={6}>
+                {showFullDescription
+                  ? project.description
+                  : project.description.slice(0, 160)}
+                {project.description.length > 160 && (
+                  <Link color="blue.500" onClick={toggleDescription}>
+                    {showFullDescription ? '' : 'Read More'}
+                  </Link>
+                )}
+              </Text>
+            )}
+            <Author name={project.author.name} avatarSrc="" />
           </Flex>
-          <VStack spacing="24px" w="min(100%, 500px)">
+          <VStack
+            spacing={{ md: '24px', base: '0px' }}
+            w="min(100%, 600px)"
+            gap={'10px'}
+          >
             <Flex justify="space-between" w="full">
               <DataWithLabel
+                icon={<Icon as={FcInfo} w="20px" h="20px" />}
                 label="Status"
                 value={status}
                 valueProps={{ color: statusColor[status] }}
-                leftAdornment={
-                  <DotIcon
-                    w="12px"
-                    h="12px"
-                    color={statusColor[status]}
-                    animation={
-                      status === Status.RUNNING
-                        ? `${animations.flash} 1s infinite linear reverse`
-                        : ''
-                    }
-                  />
-                }
               />
-              <DataWithLabel label="Platform" value="100" />
+
               <DataWithLabel
+                icon={<Icon as={FcAbout} w={'20px'} h={'20px'} />}
+                label="Platform"
+                value="Node.js"
+              />
+              <DataWithLabel
+                icon={<Icon as={FcClock} w={'20px'} h={'20px'} />}
                 label="Duration"
                 value={timer}
                 rightAdornment={
@@ -345,35 +410,59 @@ const RunProject = ({
                 }
               />
             </Flex>
-            <DataWithLabel
-              label="Url"
-              value="http://localhost:3000/projects/6479766078ef1e038b8a0097"
-            />
-            <Flex justify="space-between" w="full">
+            <Flex
+              justify="space-between"
+              w="full"
+              wordBreak="break-word"
+              onClick={handleCopyToClipboard}
+              cursor="pointer"
+            >
               <DataWithLabel
-                label="Throughput"
-                value={reportStatus.throughput}
-              />
-              <DataWithLabel label="CPU Usage" value={reportStatus.cpuUsage} />
-              <DataWithLabel
-                label="Data TransferLoad"
-                value={reportStatus.dataTransferLoad}
+                border={true}
+                icon={<Icon as={FcLink} w={'20px'} h={'20px'} />}
+                label="Url - Click to copy"
+                value={'http://localhost:3000/projects/' + project.projectId}
               />
             </Flex>
+
+            <Flex justify="space-between" w="full">
+              <DataWithLabel
+                icon={<Icon as={FcSynchronize} w={'20px'} h={'20px'} />}
+                label="OPS"
+                value={reportStatus.throughput.toFixed(5)}
+              />
+              <DataWithLabel
+                icon={<Icon as={FcElectronics} w={'20px'} h={'20px'} />}
+                label="CPU Usage"
+                value={reportStatus.cpuUsage.toFixed(5)}
+              />
+              <DataWithLabel
+                icon={<Icon as={FcDocument} w={'20px'} h={'20px'} />}
+                label="My output"
+                value={reportStatus.totalOutput}
+              />
+            </Flex>
+            {project?.host && (
+              <Button
+                onClick={handleClick}
+                w="full"
+                flex="1"
+                minW="150px"
+                minHeight={'50px'}
+                maxHeight={'50px'}
+                colorScheme={starting ? 'red' : 'blue'}
+              >
+                {starting ? 'Terminate' : 'Start'}
+              </Button>
+            )}
           </VStack>
-          {project?.host && (
-            <Button
-              onClick={handleClick}
-              w="full"
-              flex="1"
-              minW="150px"
-              colorScheme={starting ? 'red' : 'blue'}
-            >
-              {starting ? 'Terminate' : 'Start'}
-            </Button>
-          )}
         </Flex>
-        <VStack spacing="24px" w="full" mt="60px" align="start">
+        <VStack
+          spacing="24px"
+          w="full"
+          mt="60px"
+          align={{ base: 'center', md: 'start' }}
+        >
           <Heading size="md">Computing Logs</Heading>
           <Logs data={logs} tableContainerProps={{ maxH: '500px' }} />
         </VStack>
@@ -388,10 +477,13 @@ export const getServerSideProps: GetServerSideProps<{
   bundleFile: string | undefined
   environment: 'production' | 'development'
   project: {
+    description: string
     name: string
     port: string
     host: string
     bucketId: string
+    projectId: string
+    author: any
   }
 }> = async (context) => {
   const { projectId = '' } = context.params || {}
@@ -402,7 +494,7 @@ export const getServerSideProps: GetServerSideProps<{
   return {
     props: {
       bundleFile,
-      project: data,
+      project: { ...data, projectId: projectId },
       environment:
         process.env.NODE_ENV === 'production' ? 'production' : 'development'
     }

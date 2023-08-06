@@ -33,7 +33,7 @@ const Upload = ({
   }
 
   return (
-    <FormControl>
+    <FormControl minW={{ base: '340px', md: '290px' }}>
       <Input
         {...rest}
         type="file"
@@ -62,6 +62,8 @@ const Upload = ({
             )}
             <VStack spacing="4px">
               <Text
+                textAlign={'center'}
+                mx={'20px'}
                 fontSize="md"
                 lineHeight={6}
                 fontWeight="medium"

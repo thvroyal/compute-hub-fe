@@ -1,4 +1,4 @@
-import { Flex, Heading, Text, VStack } from '@chakra-ui/react'
+import { Flex, Heading, Text, VStack, Icon } from '@chakra-ui/react'
 import Container from 'components/Container'
 import dynamic from 'next/dynamic'
 import { useState, useEffect } from 'react'
@@ -16,6 +16,12 @@ import {
   ResponsiveContainer
 } from 'recharts'
 import {
+  FcBarChart,
+  FcConferenceCall,
+  FcGlobe,
+  FcServices
+} from 'react-icons/fc'
+import {
   chartData,
   getChartData,
   getHighestAverageOutputUser,
@@ -28,7 +34,6 @@ import { getProjectReport } from '../../../helpers/apis'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { getProjectById } from 'helpers/apis'
 import { useSession } from 'next-auth/react'
-import Image from 'next/image'
 
 const DynamicBarChart = dynamic(
   () => import('recharts').then((module) => module.BarChart),
@@ -56,16 +61,15 @@ const ProjectAnalytics = ({
     numberOfUsers: 0,
     online: 0
   })
-  const isClient = true
   const { bucketId, name: projectName, computeInfo } = prop
+
+  const [comptueStatus, setComputeStatus] = useState<string>('running')
+
+  const isClient = true
 
   const { data: session } = useSession()
   const userId = session?.user.id
   const userName = session?.user.name
-
-  useEffect(() => {
-    console.log(totalOutput)
-  }, [totalOutput])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,6 +80,10 @@ const ProjectAnalytics = ({
           response.data.projectReport.contributions,
           response.data.projectReport.totalOutput
         )
+
+        if (totalOutput.outputs === computeInfo.totalInput) {
+          setComputeStatus('completed')
+        }
 
         setTotalOutput(() => {
           const { outputs, numberOfUsers } =
@@ -91,10 +99,22 @@ const ProjectAnalytics = ({
               },
               { outputs: 0, numberOfUsers: 0 }
             )
-          const onlineUsers =
+
+          const latestContribution =
             response.data.projectReport.contributions[
               response.data.projectReport.contributions.length - 1
-            ].contribution.length
+            ]
+
+          let onlineUsers = 0
+          try {
+            if (Date.now() - Date.parse(latestContribution.timestamp) < 4000) {
+              onlineUsers = latestContribution.contribution.length
+            } else {
+              onlineUsers = 0
+            }
+          } catch (e) {
+            console.log(e)
+          }
 
           return { outputs, numberOfUsers, online: onlineUsers }
         })
@@ -119,12 +139,14 @@ const ProjectAnalytics = ({
       }
     }
 
-    fetchData()
+    if (comptueStatus === 'running') {
+      fetchData()
 
-    const interval = setInterval(fetchData, 3000)
+      const interval = setInterval(fetchData, 3000)
 
-    return () => {
-      clearInterval(interval)
+      return () => {
+        clearInterval(interval)
+      }
     }
   }, [])
 
@@ -172,7 +194,7 @@ const ProjectAnalytics = ({
         justifyItems={'center'}
       >
         <Flex direction={'column'} maxW={600} justifyContent={'space-between'}>
-          <Heading color="gray.600" size={{ base: 'lg', md: '2xl' }}>
+          <Heading color="gray.600" size={{ base: 'lg', md: 'xl' }}>
             Volunteers Monitoring
           </Heading>
 
@@ -201,41 +223,52 @@ const ProjectAnalytics = ({
           flexWrap="wrap"
         >
           <Flex gap={'5'} minW={200}>
-            <Image src="/img/count_icon.png" width={45} height={45} alt={''} />
+            <Icon as={FcServices} w={'40px'} h={'40px'} />
+            <VStack spacing="0" align={'flex-start'}>
+              <Text color="gray.600" fontSize="md" lineHeight={6}>
+                Status
+              </Text>
+              <Text
+                color={comptueStatus == 'running' ? 'yellow.500' : 'green.500'}
+                fontSize="lg"
+                lineHeight={6}
+              >
+                {comptueStatus}
+              </Text>
+            </VStack>
+          </Flex>
+
+          <Flex gap={'5'} minW={200}>
+            <Icon as={FcBarChart} w={'40px'} h={'40px'} />
             <VStack spacing="0" align={'flex-start'}>
               <Text color="gray.600" fontSize="md" lineHeight={6}>
                 Total output
               </Text>
-              <Text color="gray.500" fontSize="sm" lineHeight={6}>
+              <Text color="gray.500" fontSize="lg" lineHeight={6}>
                 {totalOutput.outputs} / {computeInfo.totalInput}
               </Text>
             </VStack>
           </Flex>
 
           <Flex gap={'5'} minW={200}>
-            <Image
-              src="/img/volunteers_icon.png"
-              width={50}
-              height={50}
-              alt={''}
-            />
+            <Icon as={FcConferenceCall} w={'40px'} h={'40px'} />
             <VStack spacing="0" align={'flex-start'}>
               <Text color="gray.600" fontSize="md" lineHeight={6}>
                 Volunteers
               </Text>
-              <Text color="gray.500" fontSize="sm" lineHeight={6}>
+              <Text color="gray.500" fontSize="lg" lineHeight={6}>
                 {totalOutput.numberOfUsers}
               </Text>
             </VStack>
           </Flex>
 
           <Flex gap={'5'} minW={200}>
-            <Image src="/img/online_icon.png" width={50} height={50} alt={''} />
+            <Icon as={FcGlobe} w={'40px'} h={'40px'} />
             <VStack spacing="0" align={'flex-start'}>
               <Text color="gray.600" fontSize="md" lineHeight={6}>
                 Online
               </Text>
-              <Text color="gray.500" fontSize="sm" lineHeight={6}>
+              <Text color="gray.500" fontSize="lg" lineHeight={6}>
                 {totalOutput.online}
               </Text>
             </VStack>
@@ -253,7 +286,6 @@ const ProjectAnalytics = ({
         justifyItems={'center'}
       >
         <Flex
-          // w="min(100%, 55%)"
           flexDir="column"
           border="1px solid"
           backgroundColor={'white'}
@@ -269,7 +301,7 @@ const ProjectAnalytics = ({
               <DynamicBarChart
                 width={350}
                 height={350}
-                data={getHighestAverageOutputUser(chartData)}
+                data={getHighestAverageOutputUser(chartData, userId)}
                 margin={{
                   top: 30,
                   right: 30,
@@ -285,10 +317,18 @@ const ProjectAnalytics = ({
                 />
                 <YAxis />
                 <Tooltip />
-                <Legend />
+                <Legend
+                  payload={[
+                    {
+                      value: 'Highest average contributions',
+                      color: '#8884d8',
+                      type: 'triangle'
+                    }
+                  ]}
+                />
                 <CartesianGrid strokeDasharray="3 3" />
                 <Bar
-                  name="Highest average output users"
+                  name="Output per second"
                   dataKey="average"
                   fill="#8884d8"
                   background={{ fill: '#eee' }}
@@ -301,7 +341,6 @@ const ProjectAnalytics = ({
         {/* Relative Throughput  */}
 
         <Flex
-          // w="min(100%, 45%)"
           flexDir="column"
           border="1px solid"
           borderRadius="16px"
@@ -319,7 +358,7 @@ const ProjectAnalytics = ({
                   name="Throughput"
                   activeIndex={activeIndex}
                   activeShape={renderActiveShape}
-                  data={getHighestAverageOutputUser(chartData)}
+                  data={getHighestAverageOutputUser(chartData, userId)}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -333,7 +372,7 @@ const ProjectAnalytics = ({
                     {
                       value: 'Relative average output',
                       color: '#8884d8',
-                      type: 'rect'
+                      type: 'triangle'
                     }
                   ]}
                   height={55}
@@ -345,7 +384,6 @@ const ProjectAnalytics = ({
 
         {/* Total Output */}
         <Flex
-          // w="min(100%, 45%)"
           backgroundColor={'white'}
           shadow={'lg'}
           flexDir="column"
@@ -378,9 +416,9 @@ const ProjectAnalytics = ({
               <Legend
                 payload={[
                   {
-                    value: 'Your total output / input',
+                    value: 'Your total output',
                     color: '#8884d8',
-                    type: 'rect'
+                    type: 'triangle'
                   }
                 ]}
                 height={55}

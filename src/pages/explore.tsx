@@ -1,7 +1,7 @@
 import { Flex, Text } from '@chakra-ui/layout'
 import Container from 'components/Container'
 import ProjectCard from 'components/ProjectCard'
-import { Author, Joined, UnprocessedUnit } from 'components/ProjectCard/States'
+import { Author, UnprocessedUnit } from 'components/ProjectCard/States'
 import { getProjects } from 'helpers/apis'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { Project } from 'types/Project'
@@ -27,7 +27,13 @@ const Explore = (
               key={project.id}
               name={project.name}
               id={project.id}
-              description="Amicable Numbers is an independent research project that uses Internet-connected computers to find new amicable pairs. You can contribute to our research by running a free program on your computer."
+              description={
+                project.description ||
+                `
+                Processing happens on volunteer processes in a web browser on the same and on other machines. 
+                Volunteers may join at any time and will be given newer jobs as long as they stay available. They may stop before finishing a given job in which case the incomplete job will be transparently reassigned to another volunteer. Results are produced on the standard output in the same order as their input values, making it convenient to pipe to other unix tools.
+              `
+              }
               categories={project.categories}
               info={[
                 <Author

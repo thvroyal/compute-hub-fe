@@ -121,6 +121,7 @@ const ProjectCard = ({
             variant="solid"
             bgColor="blackAlpha.200"
             onClick={handleClick}
+            visibility={{ base: 'hidden', md: 'visible' }}
           >
             Join to project
           </Button>
