@@ -273,17 +273,6 @@ const RunProject = ({
     }))
   }, [submitState])
 
-  const [intervalId, setIntervalId] = useState<null | NodeJS.Timeout>(null)
-
-  useEffect(() => {
-    // Clean up the interval when the component unmounts
-    return () => {
-      if (intervalId !== null) {
-        clearInterval(intervalId)
-      }
-    }
-  }, [intervalId])
-
   const handleClick = async () => {
     if (numOfScriptLoaded === MAX_SCRIPTS) {
       if (status !== Status.RUNNING) {
