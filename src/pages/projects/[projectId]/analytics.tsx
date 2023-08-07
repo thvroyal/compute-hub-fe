@@ -80,11 +80,6 @@ const ProjectAnalytics = ({
           response.data.projectReport.contributions,
           response.data.projectReport.totalOutput
         )
-
-        if (totalOutput.outputs === computeInfo.totalInput) {
-          setComputeStatus('completed')
-        }
-
         setTotalOutput(() => {
           const { outputs, numberOfUsers } =
             response.data.projectReport.totalOutput.reduce(
@@ -114,6 +109,9 @@ const ProjectAnalytics = ({
             }
           } catch (e) {
             console.log(e)
+          }
+          if (outputs === computeInfo.totalInput) {
+            setComputeStatus('completed')
           }
 
           return { outputs, numberOfUsers, online: onlineUsers }

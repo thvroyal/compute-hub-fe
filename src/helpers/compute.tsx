@@ -244,20 +244,16 @@ export const getHighestAverageOutputUser = (
       },
       obj: { userId: string; userName: string; average: number }
     ) => {
-      if (
-        !accumulator[obj.userId] ||
-        accumulator[obj.userId].average < obj.average
-      ) {
-        accumulator[obj.userId] = {
-          userId: obj.userId,
-          userName: obj.userName,
-          average: obj.average
-        }
-
-        if (user === obj.userId) {
-          accumulator[obj.userId].userName = 'You'
-        }
+      accumulator[obj.userId] = {
+        userId: obj.userId,
+        userName: obj.userName,
+        average: obj.average
       }
+
+      if (user === obj.userId) {
+        accumulator[obj.userId].userName = 'You'
+      }
+      // }
       return accumulator
     },
     {}

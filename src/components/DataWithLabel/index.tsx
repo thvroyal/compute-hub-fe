@@ -34,7 +34,8 @@ const DataWithLabel = ({
       border={border ? '1px solid' : 'none'}
       // border={'1px solid'}
       borderColor="gray.200"
-      p="4"
+      pl="4"
+      py="4"
       borderRadius="lg"
       w="full"
     >
